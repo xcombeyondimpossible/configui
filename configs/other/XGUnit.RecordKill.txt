@@ -1,0 +1,73 @@
+UPK_FILE = XComGame.upk
+OBJECT = XGUnit.RecordKill : AUTO
+[REPLACEMENT_CODE]
+49 [@] ( 28 15 ) 
+0F 00 <.kFireAction> 2E <Class.XGAction_Fire> 01 <XGUnitNativeBase.m_kCurrAction> 
+07 [@label_0x0058] 77 00 <.kFireAction> 2A 16 
+	19 00 <.kFireAction> [@] <NullRef> 00 ( 1B <AddVictim> 00 <.kVictim> 16 ) 
+[#label_0x0058]
+
+//if(class'Engine'.static.GetCurrentWorldInfo().Game.BaseMutator != none)
+07 [@NoMutators] 77 19
+19 12 20 <Engine.Engine> 0A 00 <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 1C <Engine.Engine.GetCurrentWorldInfo> 16 09 00 <Engine.WorldInfo.Game> 00 01 <Engine.WorldInfo.Game>
+09 00 <Engine.GameInfo.BaseMutator> 00 01 <Engine.GameInfo.BaseMutator>
+2A 16
+	//class'Engine'.static.GetCurrentWorldInfo().Game.BaseMutator.Mutate("XGUnit.RecordKill", class'Engine'.static.GetCurrentWorldInfo().GetALocalPlayerController());
+	19 19
+	19 12 20 <Engine.Engine> 0A 00 <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 1C <Engine.Engine.GetCurrentWorldInfo> 16 09 00 <Engine.WorldInfo.Game> 00 01 <Engine.WorldInfo.Game>
+	09 00 <Engine.GameInfo.BaseMutator> 00 01 <Engine.GameInfo.BaseMutator>
+	0A 00 <NullRef> 00 1B <Mutate>
+	70
+	70
+	70
+	1F <%t "XGUnit.RecordKill:">
+	38 57 01 <Core.Object.Name>
+	16
+	1F <%t ",">
+	16
+	38 57 19 00 <.kVictim> 09 00 <Core.Object.Name> 00 01 <Core.Object.Name>
+	16
+	19 12 20 <Engine.Engine> 0A 00 <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 1C <Engine.Engine.GetCurrentWorldInfo> 16
+	0A 00 <Engine.Actor.GetALocalPlayerController.ReturnValue> 00 1C <Engine.Actor.GetALocalPlayerController> 16
+	16
+[#NoMutators]
+
+
+07 [@label_0x08FA] 82 9A 35 <XGTacticalGameCoreNativeBase.TCharacter.iType> <XGTacticalGameCoreNativeBase.TCharacter> 00 00 19 1B <GetCharacter> 16 [@] <XGCharacter.m_kChar> 00 ( 01 <XGCharacter.m_kChar> ) 2C 02 16 18 [@] ( 1B <IsEnemy> 00 <.kVictim> 16 16 ) 
+	14 2D 00 <.bAlreadyLeveledUp> 19 2E <Class.XGCharacter_Soldier> 1B <GetCharacter> 16 [@] <XGCharacter_Soldier.LeveledUp.ReturnValue> 00 ( 1B <LeveledUp> 16 ) 
+	19 2E <Class.XGCharacter_Soldier> 1B <GetCharacter> 16 [@] <NullRef> 00 ( 1B <AddXP> 19 19 2E <Class.XComGameReplicationInfo> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.WorldInfo.GRI> 00 ( 01 <Engine.WorldInfo.GRI> ) [@] <XComGameReplicationInfo.m_kGameCore> 00 ( 01 <XComGameReplicationInfo.m_kGameCore> ) [@] <XGTacticalGameCore.CalcXP.ReturnValue> 00 ( 1B <CalcXP> 17 25 00 <.kVictim> 16 ) 16 ) 
+	07 [@label_0x01F1] 82 19 2E <Class.XGCharacter_Soldier> 1B <GetCharacter> 16 [@] <XGCharacter_Soldier.LeveledUp.ReturnValue> 00 ( 1B <LeveledUp> 16 ) 18 [@] ( 81 2D 00 <.bAlreadyLeveledUp> 16 16 ) 
+		19 2E <Class.XComTacticalController> 01 <Engine.Actor.Owner> [@] <NullRef> 00 ( 1B <ClientPHUDLevelUp> 2E <Class.XGCharacter_Soldier> 1B <GetCharacter> 16 16 ) 
+	[#label_0x01F1]
+	07 [@label_0x08FA] 77 2E <Class.XGBattle_SP> 19 2E <Class.XComTacticalGRI> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.WorldInfo.GRI> 00 ( 01 <Engine.WorldInfo.GRI> ) [@] <XComTacticalGRI.m_kBattle> 00 ( 01 <XComTacticalGRI.m_kBattle> ) 2A 16 
+		07 [@label_0x08FA] 19 00 <.kVictim> [@] <XGUnit.IsAlien_CheckByCharType.ReturnValue> 00 ( 1B <IsAlien_CheckByCharType> 16 ) 
+			07 [@label_0x02DF] 1B <IsFlying> 16 
+				19 2E <Class.XComOnlineEventMgr> 19 2E <Engine.GameEngine> 12 20 <Engine.Engine> [@] <Engine.Engine.GetEngine.ReturnValue> 00 ( 1C <Engine.Engine.GetEngine> 16 ) [@] <Engine.GameEngine.OnlineEventManager> 00 ( 01 <Engine.GameEngine.OnlineEventManager> ) [@] <NullRef> 00 ( 1B <UnlockAchievement> 24 0E 16 ) 
+			[#label_0x02DF]
+			19 19 2E <Class.XComTacticalGRI> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.WorldInfo.GRI> 00 ( 01 <Engine.WorldInfo.GRI> ) [@] <XComTacticalGRI.m_kBattle> 00 ( 01 <XComTacticalGRI.m_kBattle> ) [@] <NullRef> 00 ( 1B <STAT_AddProfileStat> 24 06 1E <%f 1> 16 ) 
+			19 19 2E <Class.XComTacticalGRI> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.WorldInfo.GRI> 00 ( 01 <Engine.WorldInfo.GRI> ) [@] <XComTacticalGRI.m_kBattle> 00 ( 01 <XComTacticalGRI.m_kBattle> ) [@] <XGBattle.STAT_AddStat.ReturnValue> 00 ( 1B <STAT_AddStat> 24 63 26 16 ) 
+			07 [@label_0x04A0] 2D 00 <.bDiedFromExplosiveDamage> 
+				19 19 2E <Class.XComTacticalGRI> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.WorldInfo.GRI> 00 ( 01 <Engine.WorldInfo.GRI> ) [@] <XComTacticalGRI.m_kBattle> 00 ( 01 <XComTacticalGRI.m_kBattle> ) [@] <NullRef> 00 ( 1B <STAT_AddProfileStat> 24 07 1E <%f 1> 16 ) 
+				19 19 2E <Class.XComTacticalGRI> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.WorldInfo.GRI> 00 ( 01 <Engine.WorldInfo.GRI> ) [@] <XComTacticalGRI.m_kBattle> 00 ( 01 <XComTacticalGRI.m_kBattle> ) [@] <XGBattle.STAT_AddStat.ReturnValue> 00 ( 1B <STAT_AddStat> 24 64 26 16 ) 
+			[#label_0x04A0]
+			07 [@label_0x0571] B3 19 19 2E <Class.XComTacticalGRI> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.WorldInfo.GRI> 00 ( 01 <Engine.WorldInfo.GRI> ) [@] <XComTacticalGRI.m_kBattle> 00 ( 01 <XComTacticalGRI.m_kBattle> ) [@] <XGBattle.STAT_GetProfileStat.ReturnValue> 00 ( 1B <STAT_GetProfileStat> 24 07 16 ) 38 3F 2C 32 16 
+				19 2E <Class.XComOnlineEventMgr> 19 2E <Engine.GameEngine> 12 20 <Engine.Engine> [@] <Engine.Engine.GetEngine.ReturnValue> 00 ( 1C <Engine.Engine.GetEngine> 16 ) [@] <Engine.GameEngine.OnlineEventManager> 00 ( 01 <Engine.GameEngine.OnlineEventManager> ) [@] <NullRef> 00 ( 1B <UnlockAchievement> 24 07 16 ) 
+			[#label_0x0571]
+			07 [@label_0x0642] B3 19 19 2E <Class.XComTacticalGRI> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.WorldInfo.GRI> 00 ( 01 <Engine.WorldInfo.GRI> ) [@] <XComTacticalGRI.m_kBattle> 00 ( 01 <XComTacticalGRI.m_kBattle> ) [@] <XGBattle.STAT_GetProfileStat.ReturnValue> 00 ( 1B <STAT_GetProfileStat> 24 06 16 ) 38 3F 2C 96 16 
+				19 2E <Class.XComOnlineEventMgr> 19 2E <Engine.GameEngine> 12 20 <Engine.Engine> [@] <Engine.Engine.GetEngine.ReturnValue> 00 ( 1C <Engine.Engine.GetEngine> 16 ) [@] <Engine.GameEngine.OnlineEventManager> 00 ( 01 <Engine.GameEngine.OnlineEventManager> ) [@] <NullRef> 00 ( 1B <UnlockAchievement> 24 08 16 ) 
+			[#label_0x0642]
+			07 [@label_0x0716] B3 19 19 2E <Class.XComTacticalGRI> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.WorldInfo.GRI> 00 ( 01 <Engine.WorldInfo.GRI> ) [@] <XComTacticalGRI.m_kBattle> 00 ( 01 <XComTacticalGRI.m_kBattle> ) [@] <XGBattle.STAT_GetProfileStat.ReturnValue> 00 ( 1B <STAT_GetProfileStat> 24 06 16 ) 38 3F 1D <%i 500> 16 
+				19 2E <Class.XComOnlineEventMgr> 19 2E <Engine.GameEngine> 12 20 <Engine.Engine> [@] <Engine.Engine.GetEngine.ReturnValue> 00 ( 1C <Engine.Engine.GetEngine> 16 ) [@] <Engine.GameEngine.OnlineEventManager> 00 ( 01 <Engine.GameEngine.OnlineEventManager> ) [@] <NullRef> 00 ( 1B <UnlockAchievement> 24 09 16 ) 
+			[#label_0x0716]
+			07 [@label_0x07A9] 82 9A 19 00 <.kVictim> [@] <XGUnitNativeBase.GetCharType.ReturnValue> 00 ( 1B <GetCharType> 16 ) 2C 1F 16 18 [@] ( 2D 00 <.bDiedFromExplosiveDamage> 16 ) 
+				19 2E <Class.XComOnlineEventMgr> 19 2E <Engine.GameEngine> 12 20 <Engine.Engine> [@] <Engine.Engine.GetEngine.ReturnValue> 00 ( 1C <Engine.Engine.GetEngine> 16 ) [@] <Engine.GameEngine.OnlineEventManager> 00 ( 01 <Engine.GameEngine.OnlineEventManager> ) [@] <NullRef> 00 ( 1B <UnlockAchievement> 24 4D 16 ) 
+			[#label_0x07A9]
+			06 [@label_0x08FA] 
+			77 2E <Class.XGBattle_SPCovertOpsExtraction> 19 2E <Class.XComTacticalGRI> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.WorldInfo.GRI> 00 ( 01 <Engine.WorldInfo.GRI> ) [@] <XComTacticalGRI.m_kBattle> 00 ( 01 <XComTacticalGRI.m_kBattle> ) 2A 16 
+			07 [@label_0x08FA] 72 17 19 2E <Class.XGBattle_SPCovertOpsExtraction> 19 2E <Class.XComTacticalGRI> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.WorldInfo.GRI> 00 ( 01 <Engine.WorldInfo.GRI> ) [@] <XComTacticalGRI.m_kBattle> 00 ( 01 <XComTacticalGRI.m_kBattle> ) [@] <XGBattle_SPCovertOpsExtraction.GetCovertOperative.ReturnValue> 00 ( 1B <GetCovertOperative> 16 ) 16 
+				A5 01 <@m_iCovertOpKills> 16 
+				07 [@label_0x08FA] 97 01 <@m_iCovertOpKills> 2C 02 16 
+					19 2E <Class.XComOnlineEventMgr> 19 2E <Engine.GameEngine> 12 20 <Engine.Engine> [@] <Engine.Engine.GetEngine.ReturnValue> 00 ( 1C <Engine.Engine.GetEngine> 16 ) [@] <Engine.GameEngine.OnlineEventManager> 00 ( 01 <Engine.GameEngine.OnlineEventManager> ) [@] <NullRef> 00 ( 1B <UnlockAchievement> 24 4B 16 ) 
+[#label_0x08FA]
+04 0B 
+53 

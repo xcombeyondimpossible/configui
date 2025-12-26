@@ -1,0 +1,53 @@
+//Activating mutated StrategyAI for LW
+UPK_FILE = XComStrategyGame.upk
+OBJECT = XGStrategy.NewGame : AUTO
+[REPLACEMENT_CODE]
+0F 01 <@m_kWorld> 1C <Engine.Actor.Spawn> 20 <Class.XGWorld> 4A 4A 4A 4A 4A 4A 4A 16 
+0F 01 <@m_kGeoscape> 1C <Engine.Actor.Spawn> 20 <Class.XGGeoscape> 4A 4A 4A 4A 4A 4A 4A 16 
+0F 01 <@m_kHQ> 1C <Engine.Actor.Spawn> 20 <Class.XGHeadQuarters> 4A 4A 4A 4A 4A 4A 4A 16 
+
+//if(class'Engine'.static.GetCurrentWorldInfo().Game.BaseMutator != none)
+07 [@NoMutators] 77 19
+19 12 20 <Engine.Engine> 0A 00 <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 1C <Engine.Engine.GetCurrentWorldInfo> 16 09 00 <Engine.WorldInfo.Game> 00 01 <Engine.WorldInfo.Game>
+09 00 <Engine.GameInfo.BaseMutator> 00 01 <Engine.GameInfo.BaseMutator>
+2A 16
+//class'Engine'.static.GetCurrentWorldInfo().Game.BaseMutator.Mutate("XGStrategy.NewGame", class'Engine'.static.GetCurrentWorldInfo().GetALocalPlayerController());
+19 19
+19 12 20 <Engine.Engine> 0A 00 <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 1C <Engine.Engine.GetCurrentWorldInfo> 16 09 00 <Engine.WorldInfo.Game> 00 01 <Engine.WorldInfo.Game>
+09 00 <Engine.GameInfo.BaseMutator> 00 01 <Engine.GameInfo.BaseMutator>
+0A 00 <NullRef> 00 1B <Mutate>
+1F <%t "XGStrategy.NewGame">
+19 12 20 <Engine.Engine> 0A 00 <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 1C <Engine.Engine.GetCurrentWorldInfo> 16
+0A 00 <Engine.Actor.GetALocalPlayerController.ReturnValue> 00 1C <Engine.Actor.GetALocalPlayerController> 16
+16
+[#NoMutators]
+//if (m_kAI == None) // if not created by mutator
+07 [@AISpawned] 72 01 <@m_kAI> 2A 16
+0F 01 <@m_kAI> 1C <Engine.Actor.Spawn> 20 <Class.XGStrategyAI> 4A 4A 4A 4A 4A 4A 4A 16 
+[#AISpawned]
+
+0F 01 <@m_kRecapSaveData> 1C <Engine.Actor.Spawn> 20 <XComGame.XGRecapSaveData> 4A 4A 4A 4A 4A 4A 4A 16 
+0F 01 <@m_kExaltSimulation> 1C <Engine.Actor.Spawn> 20 <Class.XGExaltSimulation> 4A 4A 4A 4A 4A 4A 4A 16 
+54 01 <@m_arrMissionTotals> 2C 29 
+16 
+0F 10 2C 1E 01 <@m_arrMissionTotals> 38 44 AB 12 20 <XComGame.XGTacticalGameCore> [@] <XComGame.XGTacticalGameCoreNativeBase.SW_ELERIUM_LOSS> 00 ( 02 <XComGame.XGTacticalGameCoreNativeBase.SW_ELERIUM_LOSS> ) 1E <%f 0.2> 16 
+0F 10 2C 1F 01 <@m_arrMissionTotals> 38 44 AB 12 20 <XComGame.XGTacticalGameCore> [@] <XComGame.XGTacticalGameCoreNativeBase.SW_ELERIUM_LOSS> 00 ( 02 <XComGame.XGTacticalGameCoreNativeBase.SW_ELERIUM_LOSS> ) 1E <%f 0.7> 16 
+0F 10 2C 20 01 <@m_arrMissionTotals> 38 44 AB 12 20 <XComGame.XGTacticalGameCore> [@] <XComGame.XGTacticalGameCoreNativeBase.SW_ELERIUM_LOSS> 00 ( 02 <XComGame.XGTacticalGameCoreNativeBase.SW_ELERIUM_LOSS> ) 1E <%f 0.4> 16 
+0F 10 2C 23 01 <@m_arrMissionTotals> 38 44 AB 12 20 <XComGame.XGTacticalGameCore> [@] <XComGame.XGTacticalGameCoreNativeBase.SW_ELERIUM_LOSS> 00 ( 02 <XComGame.XGTacticalGameCoreNativeBase.SW_ELERIUM_LOSS> ) 1E <%f 0.7> 16 
+0F 10 2C 24 01 <@m_arrMissionTotals> 38 44 AB 12 20 <XComGame.XGTacticalGameCore> [@] <XComGame.XGTacticalGameCoreNativeBase.SW_ELERIUM_LOSS> 00 ( 02 <XComGame.XGTacticalGameCoreNativeBase.SW_ELERIUM_LOSS> ) 1E <%f 0.5> 16 
+0F 01 <@m_kNarrative> 1C <Engine.Actor.Spawn> 20 <XComGame.XGNarrative> 4A 4A 4A 4A 4A 4A 4A 16 
+19 01 <@m_kNarrative> [@] <NullRef> 00 ( 1B <InitNarrative> 19 2E <Class.XComHeadquartersGame> 19 01 <Engine.Actor.WorldInfo> [@] <Engine.WorldInfo.Game> 00 ( 01 <Engine.WorldInfo.Game> ) [@] <XComHeadquartersGame.m_bSuppressFirstTimeNarrative> 00 ( 2D 01 <XComHeadquartersGame.m_bSuppressFirstTimeNarrative> ) 16 ) 
+54 01 <@m_arrItemUnlocks> 2C FF 
+16 
+54 01 <@m_arrGeneModUnlocks> 2C 0B 
+16 
+54 01 <@m_arrFacilityUnlocks> 2C 18 
+16 
+54 01 <@m_arrFoundryUnlocks> 2C 30 
+16 
+54 01 <@m_arrSecondWave> 2C 24 
+16 
+1B <Init> 28 16 
+71 21 <Initing> 4A 4A 4A 16 
+04 0B 
+53 

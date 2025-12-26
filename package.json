@@ -1,0 +1,7 @@
+{
+    "name": "xcom-strategy-ai-sim",
+    "version": "1.0.0",
+    "scripts": {
+        "dev": "python3 app.py"
+    }
+}

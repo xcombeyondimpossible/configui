@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XCOM Strategy AI Configurator</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        :root {
+            --xcom-teal: #00ffd4;
+            --xcom-bg: #0a0e14;
+            --xcom-card: #151b23;
+            --xcom-text: #e0e0e0;
+            --xcom-border: #2d333b;
+        }
+
+        body {
+            background-color: var(--xcom-bg);
+            color: var(--xcom-text);
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .toolbar {
+            border-bottom: 2px solid var(--xcom-teal);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 255, 212, 0.05);
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .editor-pane,
+        .preview-pane {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            border-right: 1px solid var(--xcom-border);
+        }
+
+        .editor-pane {
+            background: #0d1219;
+            flex: 1.2;
+        }
+
+        .section-card {
+            background: var(--xcom-card);
+            border: 1px solid var(--xcom-border);
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+
+        .section-title {
+            color: var(--xcom-teal);
+            font-weight: bold;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        button {
+            background: var(--xcom-teal);
+            color: black;
+            border: none;
+            padding: 8px 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            border-radius: 2px;
+        }
+
+        button.danger {
+            background: #ff0055;
+            color: white;
+        }
+
+        /* Form Inputs */
+        input,
+        select {
+            background: #05080a;
+            border: 1px solid var(--xcom-border);
+            color: white;
+            padding: 4px;
+            width: 100%;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            margin-bottom: 8px;
+            align-items: center;
+            gap: 10px;
+        }
+
+        label {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .array-item {
+            border-left: 2px solid var(--xcom-teal);
+            padding-left: 10px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 10px;
+        }
+
+        /* Preview Pane Styles (Copied partially from index.html) */
+        .pod-card {
+            background: var(--xcom-card);
+            border: 1px solid var(--xcom-border);
+            border-left: 4px solid var(--xcom-teal);
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .alien-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .alien-item {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #333;
+            padding: 4px 0;
+        }
+
+        .alien-stats {
+            font-size: 10px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .main-nav {
+            display: flex;
+            background: #0d1219;
+            border-bottom: 2px solid var(--xcom-border);
+        }
+
+        .nav-tab {
+            padding: 15px 30px;
+            color: #888;
+            text-decoration: none;
+            text-transform: uppercase;
+            font-weight: bold;
+            font-size: 14px;
+            border-right: 1px solid var(--xcom-border);
+            transition: all 0.2s;
+        }
+
+        .nav-tab:hover {
+            color: var(--xcom-teal);
+            background: rgba(0, 255, 212, 0.05);
+        }
+
+        .nav-tab.active {
+            color: var(--xcom-bg);
+            background: var(--xcom-teal);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="main-nav">
+            <a href="/" class="nav-tab">Mission Simulator</a>
+            <a href="/editor" class="nav-tab active">Config Editor</a>
+        </div>
+        <div class="toolbar">
+            <div style="font-weight: bold; font-size: 18px; color: var(--xcom-teal);">
+                STRATEGY AI CONFIGURATOR
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <span v-if="saving"
+                    style="color:#aaa; display:flex; align-items:center; margin-right:10px;">Saving...</span>
+                <button class="danger" @click="revertToOriginal">Revert to Factory</button>
+                <button @click="saveConfig">Save Changes</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Left: Editor Pane -->
+            <div class="editor-pane">
+                <div v-if="error" style="color:red; border:1px solid red; padding:10px; margin-bottom:10px;">
+                    ERROR: {% raw %}{{ error }}{% endraw %}
+                </div>
+                <div v-if="loading">Loading Config...</div>
+
+                <div v-else>
+                    <!-- Iterate Top Level Sections -->
+                    <div v-for="(content, sectionName) in config" :key="sectionName" class="section-card">
+                        <div class="section-title" @click="toggleSection(sectionName)">
+                            <h2>{% raw %}{{ sectionName }}{% endraw %}</h2>
+                            <span>{% raw %}{{ expandedSections[sectionName] ? '[-]' : '[+]' }}{% endraw %}</span>
+                        </div>
+
+                        <div v-if="expandedSections[sectionName]">
+                            <div v-for="(val, key) in content" :key="key">
+
+                                <!-- Array of Objects (nested structs) -->
+                                <div v-if="isObjectDict(val)">
+                                    <h4 style="color:#888; margin: 10px 0;">{% raw %}{{ key }}{% endraw %} (Map)</h4>
+                                    <div v-for="(item, idx) in val" :key="idx" class="array-item">
+                                        <div style="font-size:11px;color:var(--xcom-teal);margin-bottom:5px;">Index {%
+                                            raw %}{{idx}}{% endraw %}</div>
+                                        <!-- Struct Fields -->
+                                        <div v-for="field in parseStruct(item)" :key="field.k" class="form-row">
+                                            <label>{% raw %}{{ field.k }}{% endraw %}</label>
+                                            <input v-model="field.v"
+                                                @change="updateStruct(sectionName, key, idx, field.k, $event.target.value)">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Standard Arrays (e.g. UFOPodNumbers) -->
+                                <div v-else-if="Array.isArray(val)">
+                                    <h4 style="color:#888; margin: 10px 0;">{% raw %}{{ key }}{% endraw %} (List)</h4>
+                                    <div v-for="(item, i) in val" :key="i" class="array-item">
+                                        <!-- Check if item is a struct-like string -->
+                                        <div v-if="item.startsWith && item.startsWith('(')">
+                                            <div v-for="field in parseStruct(item)" :key="field.k" class="form-row">
+                                                <label>{% raw %}{{ field.k }}{% endraw %}</label>
+                                                <!-- Note: Updating standard arrays is harder because they don't have stable IDs, using index i -->
+                                                <input v-model="field.v"
+                                                    @change="updateArrayStruct(sectionName, key, i, field.k, $event.target.value)">
+                                            </div>
+                                        </div>
+                                        <div v-else>
+                                            <input v-model="config[sectionName][key][i]" @change="runDraftSimulation">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Simple Key-Value -->
+                                <div v-else class="form-row">
+                                    <label>{% raw %}{{ key }}{% endraw %}</label>
+                                    <input v-if="typeof val === 'object'" :value="'[Complex Object]'" disabled>
+                                    <input v-else v-model="content[key]" @change="runDraftSimulation">
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Preview Pane -->
+            <div class="preview-pane">
+                <h3 style="color: var(--xcom-teal); margin-top: 0;">LIVE SIMULATION PREVIEW</h3>
+
+                <div class="section-card">
+                    <div class="form-row">
+                        <label>Mission Type</label>
+                        <select v-model="simParams.mission_type" @change="runDraftSimulation">
+                            <option value="Abduction">Abduction</option>
+                            <option value="Terror">Terror</option>
+                            <option value="UFO">UFO</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label>Month (0-12)</label>
+                        <input type="number" v-model.number="simParams.month" @change="updateSimMonth">
+                    </div>
+                    <div class="form-row">
+                        <label>Research (~28/mo)</label>
+                        <input type="number" v-model.number="simParams.research" @change="runDraftSimulation">
+                    </div>
+                </div>
+
+                <div v-if="simResult">
+                    <h4 style="color:white; border-bottom:1px solid #333; padding-bottom:5px;">
+                        RESULT: {% raw %}{{ simResult.num_pods }}{% endraw %} Pods
+                    </h4>
+                    <div v-for="pod in simResult.pods" :key="pod.index" class="pod-card">
+                        <div
+                            style="font-weight:bold; color:var(--xcom-teal); display:flex; justify-content:space-between;">
+                            <span>{% raw %}{{ pod.category }}{% endraw %}</span>
+                            <span v-if="pod.is_leader_pod" style="color:#ff0055;">COMMANDER</span>
+                        </div>
+                        <ul class="alien-list">
+                            <li v-for="a in pod.aliens" class="alien-item">
+                                <span :style="a.is_main ? 'color:var(--xcom-teal);font-weight:bold;' : ''">
+                                    {% raw %}{{ a.name }}{% endraw %} x{% raw %}{{ a.count }}{% endraw %}
+                                </span>
+                                <div style="font-size:10px;">HP: {% raw %}{{a.hp}}{% endraw %} | {% raw %}{{a.aim}}{%
+                                    endraw %}</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    config: {},
+                    loading: true,
+                    error: null,
+                    saving: false,
+                    expandedSections: {},
+                    simParams: {
+                        mission_type: 'Abduction',
+                        month: 0,
+                        research: 0,
+                        resources: 0,
+                        difficulty: 1,
+                        landed: true,
+                        ship_type: 'eShip_UFOSupply'
+                    },
+                    simResult: null,
+                    debounceTimer: null
+                }
+            },
+            mounted() {
+                this.loadConfig();
+                // Expand the main section by default
+                this.expandedSections['XComStrategyAIMutator.XGStrategyAI_Mod'] = true;
+            },
+            methods: {
+                async loadConfig() {
+                    try {
+                        const res = await fetch('/api/config');
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        this.config = await res.json();
+                        this.loading = false;
+                        this.runDraftSimulation();
+                    } catch (e) {
+                        this.error = e.message;
+                        this.loading = false;
+                    }
+                },
+                async saveConfig() {
+                    this.saving = true;
+                    await fetch('/api/config', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(this.config)
+                    });
+                    this.saving = false;
+                    alert("Config Saved to Disk!");
+                },
+                async revertToOriginal() {
+                    if (!confirm("Are you sure? This will wipe all your custom changes.")) return;
+                    const res = await fetch('/api/revert', { method: 'POST' });
+                    const data = await res.json();
+                    if (data.status === 'reverted') {
+                        this.config = data.config;
+                        this.runDraftSimulation();
+                        alert("Reverted to Original Factory Settings.");
+                    }
+                },
+                async runDraftSimulation() {
+                    // Debounce to prevent spam during typing
+                    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+                    this.debounceTimer = setTimeout(async () => {
+                        const res = await fetch('/api/simulate_draft', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                config: this.config,
+                                params: this.simParams
+                            })
+                        });
+                        this.simResult = await res.json();
+                    }, 500);
+                },
+                toggleSection(name) {
+                    this.expandedSections[name] = !this.expandedSections[name];
+                },
+                isObjectDict(val) {
+                    // Python sends indexed dicts like {"0": "...", "1": "..."}
+                    return typeof val === 'object' && val !== null && !Array.isArray(val);
+                },
+                parseStruct(str) {
+                    // Turns "(A=1,B=2)" into [{k:'A',v:'1'}, {k:'B',v:'2'}]
+                    if (!str || typeof str !== 'string') return [];
+                    const content = str.replace(/^\((.*)\)$/, '$1');
+                    return content.split(',').map(pair => {
+                        const parts = pair.split('=');
+                        if (parts.length < 2) return null;
+                        const [k, v] = parts;
+                        return { k: k.trim(), v: v.trim() };
+                    }).filter(p => p !== null);
+                },
+                updateStruct(section, key, idx, field, newVal) {
+                    // Reassemble the struct string
+                    // This is "lazy" parsing; ideally we'd parse fully into objects, but maintaining string format is safer for now
+                    const oldStr = this.config[section][key][idx];
+                    const pairs = this.parseStruct(oldStr);
+                    const target = pairs.find(p => p.k === field);
+                    if (target) target.v = newVal;
+
+                    const newStr = "(" + pairs.map(p => `${p.k}=${p.v}`).join(',') + ")";
+                    this.config[section][key][idx] = newStr;
+                    this.runDraftSimulation();
+                },
+                updateArrayStruct(section, key, idx, field, newVal) {
+                    // Same as updateStruct but for Array indices
+                    const oldStr = this.config[section][key][idx];
+                    const pairs = this.parseStruct(oldStr);
+                    const target = pairs.find(p => p.k === field);
+                    if (target) target.v = newVal;
+                    const newStr = "(" + pairs.map(p => `${p.k}=${p.v}`).join(',') + ")";
+                    this.config[section][key][idx] = newStr;
+                    this.runDraftSimulation();
+                },
+                updateSimMonth() {
+                    // Update research heuristic
+                    this.simParams.research = this.simParams.month * 28;
+                    this.runDraftSimulation();
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>

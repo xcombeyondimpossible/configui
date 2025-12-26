@@ -1,0 +1,13 @@
+UPK_FILE=XComStrategyGame.upk  
+OBJECT=XGFacility_SituationRoom.GetTickerText:AUTO
+[REPLACEMENT_CODE]
+//arrTicker.AddItem("Alien Research: " $ string(STAT_GetStat(1)));
+55 00 <.arrTicker> 27 00 70 1F <%t "Alien Research: "> 38 53 1B <STAT_GetStat> 24 01 16 16 16
+//arrTicker.AddItem("Bonus Research: " $ string(STAT_GetStat(2)));
+55 00 <.arrTicker> 27 00 70 1F <%t "Bonus Research: "> 38 53 1B <STAT_GetStat> 24 02 16 16 16
+//arrTicker.AddItem("Alien Resources: " $ string(STAT_GetStat(19)));
+55 00 <.arrTicker> 27 00 70 1F <%t "Alien Resources: "> 38 53 1B <STAT_GetStat> 24 13 16 16 16
+//arrTicker.AddItem("XCOM Threat Level: " $ string(STAT_GetStat(21)));
+55 00 <.arrTicker> 27 00 70 1F <%t "XCOM Threat Level: "> 38 53 1B <STAT_GetStat> 24 15 16 16 16
+//return arrTicker;
+04 00 <.arrTicker>

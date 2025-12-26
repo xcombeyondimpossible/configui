@@ -1,0 +1,15 @@
+[LoadoutManager]
+
+m_strSaveLoadout="Save Loadout"
+m_strSaveLoadoutDesc="Save the current equipment loadout to a class-specific loadout slot."
+m_strRestoreLoadout="Restore Loadout"
+m_strRestoreLoadoutDesc="Restore the current equipment loadout from a class-specific loadout slot."
+m_strSquadLoadout1="Squad Loadout 1"
+m_strSquadLoadout2="Squad Loadout 2"
+
+m_strEmptyLoadoutSlot="Empty Loadout Slot"
+m_strLoadoutSlot="Loadout Slot"
+m_strRestoreLoadoutFailed="Restore Loadout Failed"
+m_strNotEnoughEquipmentForSoldier="Not enough equipment to re-equip soldier"
+m_strSquadLoadoutIncomplete="Squad Loadout Incomplete"
+m_strNotEnoughEquipmentForSquad="Not enough equipment to fully re-equip squad"
