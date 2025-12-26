@@ -1,0 +1,10 @@
+node_modules/
+.venv/
+__pycache__/
+*.log
+results.json
+playwright-report/
+test-results/
+.DS_Store
+runner.py
+ssh_key.pub.txt

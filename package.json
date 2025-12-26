@@ -1,8 +1,18 @@
 {
     "name": "xcom-strategy-ai-sim",
     "version": "1.0.0",
+    "type": "module",
     "scripts": {
-        "dev": "python3 app.py",
-        "start": "pkill -f 'python3 app.py' || true; python3 app.py"
+        "start": "npx -y serve docs",
+        "dev": "npx -y serve docs",
+        "open": "open docs/index.html",
+        "test": "vitest run",
+        "test:ui": "playwright test",
+        "test:all": "npm test && npm run test:ui"
+    },
+    "devDependencies": {
+        "vitest": "^1.0.0",
+        "@playwright/test": "^1.40.0",
+        "jsdom": "^23.0.0"
     }
 }

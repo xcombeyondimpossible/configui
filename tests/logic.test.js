@@ -1,0 +1,85 @@
+import { expect, test, describe } from 'vitest';
+import { IniParser, SimEngine } from '../docs/js/xcom-logic.js';
+
+describe('XCOM INI Parser', () => {
+    test('should parse basic key-value pairs', () => {
+        const ini = `[Section]\nKey=Value`;
+        const result = IniParser.parse(ini);
+        expect(result['Section']['Key']).toEqual(['Value']);
+    });
+
+    test('should handle array indexing', () => {
+        const ini = `[Section]\nKey[0]=Value0\nKey[1]=Value1`;
+        const result = IniParser.parse(ini);
+        expect(result['Section']['Key']['0']).toBe('Value0');
+        expect(result['Section']['Key']['1']).toBe('Value1');
+    });
+
+    test('should parse struct strings to objects', () => {
+        const struct = '(MainAlien=eChar_Sectoid,MainChance=100)';
+        const obj = IniParser.parseStructToObj(struct);
+        expect(obj.MainAlien).toBe('eChar_Sectoid');
+        expect(obj.MainChance).toBe('100');
+    });
+
+    test('should generate valid INI content', () => {
+        const config = { 'Section': { 'Key': ['Value'] } };
+        const result = IniParser.generate(config);
+        expect(result).toContain('[Section]');
+        expect(result).toContain('Key=Value');
+    });
+});
+
+describe('XCOM Simulation Engine', () => {
+    const mockConfig = {
+        'XComStrategyAIMutator.XGStrategyAI_Mod': {
+            'AbductionPodNumbers': ['(MinPods=3,MaxPods=3)'],
+            'AbductionPodTypes': ['(ID=EPodTypeMod_Soldier,TypeChance=100)'],
+            'PossibleSoldiers': ['(MainAlien=eChar_Sectoid,PodChance=100,MinAliens=3,MaxAliens=3)']
+        }
+    };
+
+    test('should generate correct number of pods', () => {
+        const result = SimEngine.run(mockConfig, {}, [], { mission: 'Abduction', month: 0, resources: 0 });
+        expect(result.pods.length).toBe(3);
+        expect(result.pods[0].category).toBe('Soldier');
+    });
+
+    test('should apply research upgrades to unit stats', () => {
+        const base_stats = { 'eChar_Sectoid': { HP: "3", Offense: "65" } };
+        const upgrades = [{ eType: 'eChar_Sectoid', iHP: "2", iAim: "10", iCritHit: "1015" }]; // Month 10 (Research 280+), +2HP, +10Aim
+
+        // Month 11 (Research 308) should have the upgrade
+        const res = SimEngine.run(mockConfig, base_stats, upgrades, { mission: 'Abduction', month: 11, resources: 0 });
+        const alien = res.pods[0].aliens[0];
+        expect(alien.hp).toBe(5);
+        expect(alien.aim).toBe(75);
+    });
+
+    test('should respect PodLimit from .uc logic', () => {
+        const limitConfig = {
+            'XComStrategyAIMutator.XGStrategyAI_Mod': {
+                'AbductionPodNumbers': ['(MinPods=10,MaxPods=10)'],
+                'AbductionPodTypes': ['(ID=EPodTypeMod_Soldier,TypeChance=100)'],
+                'PossibleSoldiers': ['(MainAlien=eChar_Sectoid,PodChance=100,PodLimit=2)']
+            }
+        };
+        const res = SimEngine.run(limitConfig, {}, [], { mission: 'Abduction', month: 0, resources: 0 });
+        expect(res.pods.length).toBe(2);
+    });
+
+    test('should filter species based on PodDifficulty', () => {
+        const diffConfig = {
+            'XComStrategyAIMutator.XGStrategyAI_Mod': {
+                'AbductionPodNumbers': ['(MinPods=1,MaxPods=1)'],
+                'AbductionPodTypes': ['(ID=EPodTypeMod_Soldier,TypeChance=100)'],
+                'PossibleSoldiers': [
+                    '(MainAlien=eChar_Muton,PodChance=100,PodDifficulty=5)',
+                    '(MainAlien=eChar_Sectoid,PodChance=100,PodDifficulty=0)'
+                ]
+            }
+        };
+        const res = SimEngine.run(diffConfig, {}, [], { mission: 'Abduction', month: 0, resources: 0, difficulty: 1 });
+        expect(res.pods[0].aliens[0].name).toBe('Sectoid');
+    });
+});

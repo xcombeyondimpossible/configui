@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XCOM Strategy AI Configurator - Static</title>
+    <meta name="description" content="Configure and simulate XCOM Long War Strategy AI settings">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="js/xcom-logic.js"></script>
+    <style>
+        :root {
+            --xcom-dark: #0a0e14;
+            --xcom-darker: #050810;
+            --xcom-teal: #00d9ff;
+            --xcom-orange: #ff6b35;
+            --xcom-red: #ff0055;
+            --sidebar-width: 260px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--xcom-darker);
+            color: #ddd;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            background: #000;
+            padding: 15px 30px;
+            border-bottom: 2px solid var(--xcom-teal);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .header h1 {
+            font-size: 20px;
+            color: var(--xcom-teal);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-weight: 900;
+        }
+
+        .file-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        button {
+            background: rgba(0, 217, 255, 0.05);
+            color: var(--xcom-teal);
+            border: 1px solid var(--xcom-teal);
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            border-radius: 2px;
+        }
+
+        button:hover:not(:disabled) {
+            background: var(--xcom-teal);
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 217, 255, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            border-color: #444;
+            color: #444;
+        }
+
+        button.danger {
+            border-color: var(--xcom-red);
+            color: var(--xcom-red);
+        }
+
+        button.danger:hover {
+            background: var(--xcom-red);
+            color: white;
+        }
+
+        .workspace {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #0a1118 0%, #050810 100%);
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: rgba(0, 0, 0, 0.4);
+            border-right: 1px solid #222;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+
+        .category-btn {
+            padding: 14px 25px;
+            cursor: pointer;
+            border-left: 4px solid transparent;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            color: #888;
+        }
+
+        .category-btn:hover {
+            background: rgba(255, 255, 255, 0.02);
+            color: #fff;
+        }
+
+        .category-btn.active {
+            background: rgba(0, 217, 255, 0.08);
+            border-left-color: var(--xcom-teal);
+            color: var(--xcom-teal);
+            font-weight: bold;
+        }
+
+        .editor-area {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .preview-pane {
+            width: 420px;
+            background: rgba(0, 0, 0, 0.5);
+            border-left: 1px solid #222;
+            padding: 25px;
+            overflow-y: auto;
+        }
+
+        .section-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid #222;
+            border-radius: 4px;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            padding: 15px 20px;
+            border-bottom: 1px solid #222;
+            font-size: 13px;
+            font-weight: 900;
+            color: var(--xcom-teal);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .section-content {
+            padding: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .form-row label {
+            font-size: 12px;
+            color: #888;
+            font-weight: 500;
+        }
+
+        input,
+        select {
+            background: #000;
+            border: 1px solid #333;
+            color: #eee;
+            padding: 9px 12px;
+            font-size: 12px;
+            border-radius: 3px;
+            width: 100%;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--xcom-teal);
+            box-shadow: 0 0 5px rgba(0, 217, 255, 0.2);
+        }
+
+        .array-item {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid #222;
+            border-radius: 3px;
+            margin-bottom: 15px;
+            padding: 15px;
+            position: relative;
+            border-left: 3px solid #444;
+        }
+
+        .array-item:hover {
+            border-left-color: var(--xcom-teal);
+        }
+
+        .upload-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 50px;
+        }
+
+        .drop-box {
+            width: 550px;
+            padding: 60px;
+            border: 2px dashed #333;
+            border-radius: 8px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.01);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .drop-box:hover,
+        .drop-box.drag-over {
+            border-color: var(--xcom-teal);
+            background: rgba(0, 217, 255, 0.05);
+        }
+
+        .drop-box h2 {
+            color: var(--xcom-teal);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .drop-box p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .status-badge {
+            background: rgba(0, 217, 255, 0.1);
+            color: var(--xcom-teal);
+            padding: 4px 10px;
+            border-radius: 3px;
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .pod-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 2px solid var(--xcom-teal);
+        }
+
+        .pod-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .alien-list {
+            font-size: 11px;
+            color: #aaa;
+        }
+
+        .alien-row {
+            padding: 4px 0;
+            border-bottom: 1px solid #222;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .alien-perks {
+            color: #555;
+            font-style: italic;
+            margin-top: 2px;
+            font-size: 10px;
+        }
+
+        .filter-bar {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #222;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            flex: 1;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 10px;
+            text-transform: uppercase;
+            color: #555;
+            font-weight: bold;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+
+        .stats-tag {
+            background: #222;
+            padding: 2px 4px;
+            border-radius: 2px;
+            color: #888;
+            margin-left: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="header">
+            <h1>XCOM Strategy AI Configurator</h1>
+            <div class="file-controls" v-if="configLoaded">
+                <div><span class="status-badge">Loaded: {{ stats.characters || 0 }} Chars</span></div>
+                <button @click="downloadConfig">Save Strategy INI</button>
+                <button class="danger" @click="resetConfig">Reset All</button>
+            </div>
+        </div>
+        <div v-if="!configLoaded" class="upload-area">
+            <div class="drop-box" @dragover.prevent="dragOver = true" @dragleave="dragOver = false"
+                @drop.prevent="handleFileDrop" @click="triggerFileUpload">
+                <h2>Initialize Configuration</h2>
+                <p>Upload your <b>DefaultStrategyAIMod.ini</b> to unlock the editor.</p>
+                <p style="font-size: 12px; color: #444;">(Optional) Also upload <b>DefaultGameCore.ini</b> for accurate
+                    unit stats.</p>
+                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                    <div style="color: #666; font-size: 11px;">Strategy Mod: <span v-if="files.strategy"
+                            style="color:var(--xcom-teal)">Ready</span><span v-else>Pending</span></div>
+                    <div style="color: #666; font-size: 11px;">GameCore: <span v-if="files.core"
+                            style="color:var(--xcom-teal)">Ready</span><span v-else>Pending</span></div>
+                </div>
+                <input type="file" id="fileInput" accept=".ini" multiple style="display:none"
+                    @change="handleFileUpload">
+            </div>
+            <button v-if="files.strategy" @click="confirmInit"
+                style="margin-top: 25px; font-size: 14px; padding: 12px 30px;">Enter Editor</button>
+        </div>
+        <div v-else class="workspace">
+            <div class="sidebar">
+                <div v-for="cat in categories" :key="cat.id" class="category-btn"
+                    :class="{ active: activeCategory === cat.id }" @click="activeCategory = cat.id">
+                    <span>{{ cat.label }}</span>
+                    <span style="opacity:0.3; font-size:11px;">{{ getCategoryCount(cat.id) }}</span>
+                </div>
+            </div>
+            <div v-if="activeCategory === 'schedule'" class="editor-area">
+                <div style="margin-bottom: 25px;">
+                    <h2 style="color: var(--xcom-teal); text-transform: uppercase; letter-spacing: 2px;">Monthly
+                        Progression</h2>
+                    <p style="color: #666; font-size: 13px;">Manage alien scaling and month-by-month overrides.</p>
+                </div>
+                <div class="filter-bar">
+                    <div class="filter-group"><label>Month</label><select v-model="scheduleFilters.month">
+                            <option value="">All Months</option>
+                            <option v-for="m in sortedMonths" :key="m" :value="m">Month {{ m }}</option>
+                        </select></div>
+                    <div class="filter-group"><label>Override Type</label><select v-model="scheduleFilters.type">
+                            <option value="">All Types</option>
+                            <option v-for="key in scheduleKeys" :key="key" :value="key">{{ formatKey(key) }}</option>
+                        </select></div>
+                    <button @click="clearScheduleFilters">Clear</button>
+                </div>
+                <div v-for="month in filteredMonths" :key="month" class="section-card">
+                    <div class="section-title" @click="toggleMonth(month)"><span>MONTH {{ month }}</span><span>{{
+                            expandedMonths[month] ? '[-]' : '[+]' }}</span></div>
+                    <div v-if="expandedMonths[month]" class="section-content">
+                        <div v-for="(items, key) in getFilteredMonthItems(month)" :key="key"
+                            style="margin-bottom: 30px;">
+                            <div @click="toggleModifierType(month, key)"
+                                style="cursor:pointer; padding: 8px; background: rgba(255,255,255,0.02); display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <span
+                                    style="font-size: 12px; color: var(--xcom-orange); font-weight: bold; text-transform: uppercase;">{{
+                                    formatKey(key) }} ({{ items.length }})</span>
+                                <span style="color: #444;">{{ expandedModifierTypes[month + '_' + key] ? '[-]' : '[+]'
+                                    }}</span>
+                            </div>
+                            <div v-if="expandedModifierTypes[month + '_' + key]">
+                                <div v-for="(item, idx) in items" :key="idx" class="array-item">
+                                    <div
+                                        style="display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid #222; padding-bottom: 8px;">
+                                        <div style="font-size: 11px; font-weight: bold; color: #fff;"><span
+                                                style="color: var(--xcom-teal); text-transform: uppercase;">{{
+                                                resolveReference(key, item.ID) }}</span><span
+                                                style="color: #444; margin-left: 8px;">(Ref ID: {{ item.ID }})</span>
+                                        </div>
+                                        <button class="danger" style="padding: 2px 6px; font-size: 9px;"
+                                            @click="deleteScheduleItem(key, item._originalIndex)">Delete</button>
+                                    </div>
+                                    <div class="form-row" v-for="(v, k) in item" :key="k">
+                                        <template
+                                            v-if="k !== '_originalIndex' && k !== 'Month' && k !== '_parsed' && k !== '_raw'">
+                                            <label>{{ k }}</label>
+                                            <select v-if="isSelectionField(k, item[k])" v-model="item[k]"
+                                                @change="queueSimulationUpdate">
+                                                <option
+                                                    v-if="!constants[isSelectionField(k, item[k])].includes(item[k]) && item[k]"
+                                                    :value="item[k]">{{ item[k] }}</option>
+                                                <option v-for="opt in constants[isSelectionField(k, item[k])]"
+                                                    :key="opt" :value="opt">{{ opt }}</option>
+                                            </select>
+                                            <select v-else-if="isBooleanField(k, item[k])" v-model="item[k]"
+                                                @change="queueSimulationUpdate">
+                                                <option value="True">True</option>
+                                                <option value="False">False</option>
+                                            </select>
+                                            <input v-else type="text" v-model="item[k]" @change="queueSimulationUpdate">
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div v-else class="editor-area">
+                <div style="margin-bottom: 30px;">
+                    <h2 style="color: var(--xcom-teal); text-transform: uppercase; letter-spacing: 2px;">{{
+                        activeCategoryLabel }}</h2>
+                    <p style="color: #666; font-size: 13px;">{{ getCategoryDescription() }}</p>
+                </div>
+                <div v-for="(val, key) in currentCategoryItems" :key="key" class="section-card">
+                    <div class="section-title">{{ formatKey(key) }}</div>
+                    <div class="section-content">
+                        <div v-if="isObjectDict(val)">
+                            <div v-for="(item, idx) in val" :key="idx" class="array-item">
+                                <div
+                                    style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: center;">
+                                    <span style="font-size: 10px; font-weight: bold; color: #444;">#{{ idx
+                                        }}</span><span
+                                        v-if="isStructString(item) && getStructSum(IniParser.parseStructKV(item)) > 0"
+                                        :style="{ color: getStructSum(IniParser.parseStructKV(item)) === 100 ? 'var(--xcom-teal)' : 'var(--xcom-orange)' }"
+                                        style="font-size: 11px; font-weight: bold;">Sum: {{
+                                        getStructSum(IniParser.parseStructKV(item)) }}%</span></div>
+                                <div v-if="isStructString(item)">
+                                    <div v-for="field in IniParser.parseStructKV(item)" :key="field.k" class="form-row">
+                                        <label>{{ field.k }}</label><select v-if="isSelectionField(field.k, field.v)"
+                                            v-model="field.v"
+                                            @change="updateStruct(activeSectionName, key, idx, field.k, $event.target.value)">
+                                            <option
+                                                v-if="!constants[isSelectionField(field.k, field.v)].includes(field.v) && field.v"
+                                                :value="field.v">{{ field.v }}</option>
+                                            <option v-for="opt in constants[isSelectionField(field.k, field.v)]"
+                                                :key="opt" :value="opt">{{ opt }}</option>
+                                        </select><select v-else-if="isBooleanField(field.k, field.v)" v-model="field.v"
+                                            @change="updateStruct(activeSectionName, key, idx, field.k, $event.target.value)">
+                                            <option value="True">True</option>
+                                            <option value="False">False</option>
+                                        </select><input v-else type="text" v-model="field.v"
+                                            @change="updateStruct(activeSectionName, key, idx, field.k, $event.target.value)">
+                                    </div>
+                                </div>
+                                <div v-else class="form-row"><label>Raw Value</label><input
+                                        v-model="config[activeSectionName][key][idx]" type="text"
+                                        @change="queueSimulationUpdate"></div>
+                            </div>
+                        </div>
+                        <div v-else-if="Array.isArray(val)">
+                            <div v-for="(item, idx) in val" :key="idx" class="array-item">
+                                <div v-if="isStructString(item)">
+                                    <div v-for="field in IniParser.parseStructKV(item)" :key="field.k" class="form-row">
+                                        <label>{{ field.k }}</label><select v-if="isSelectionField(field.k, field.v)"
+                                            v-model="field.v"
+                                            @change="updateArrayStruct(activeSectionName, key, idx, field.k, $event.target.value)">
+                                            <option v-for="opt in constants[isSelectionField(field.k, field.v)]"
+                                                :key="opt" :value="opt">{{ opt }}</option>
+                                        </select><input v-else type="text" v-model="field.v"
+                                            @change="updateArrayStruct(activeSectionName, key, idx, field.k, $event.target.value)">
+                                    </div>
+                                </div>
+                                <div v-else class="form-row"><label>#{{ idx }}</label><input
+                                        v-model="config[activeSectionName][key][idx]" type="text"
+                                        @change="queueSimulationUpdate"></div>
+                            </div>
+                        </div>
+                        <div v-else class="form-row"><label>{{ key }}</label><input
+                                v-model="config[activeSectionName][key]" type="text" @change="queueSimulationUpdate">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="preview-pane">
+                <div style="margin-bottom: 25px;">
+                    <h3
+                        style="color: var(--xcom-teal); text-transform: uppercase; letter-spacing: 2px; font-size: 14px;">
+                        Tactical Projection</h3>
+                    <div style="font-size: 10px; color: #555; margin-top: 4px;">Simulation running on {{
+                        simConfig.mission }} rules.</div>
+                </div>
+                <div
+                    style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #222;">
+                    <div class="form-row" style="grid-template-columns: 80px 1fr; margin-bottom: 10px;">
+                        <label>Mission</label><select v-model="simConfig.mission" @change="runSimulation">
+                            <option value="Abduction">Abduction</option>
+                            <option value="Terror">Terror</option>
+                            <option value="UFO">Landed UFO</option>
+                            <option value="Special">Special Op</option>
+                        </select></div>
+                    <div class="form-row" style="grid-template-columns: 80px 1fr; margin-bottom: 10px;">
+                        <label>Month</label><input type="number" v-model.number="simConfig.month" @input="runSimulation"
+                            min="0" max="15"></div>
+                    <div class="form-row" style="grid-template-columns: 80px 1fr; margin-bottom: 0;">
+                        <label>Resources</label><input type="number" v-model.number="simConfig.resources"
+                            @input="runSimulation" step="10"></div>
+                </div>
+                <div v-if="simResult">
+                    <div
+                        style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 11px; color: #666; font-weight: bold; text-transform: uppercase;">Total
+                            Pods detected:</span><span
+                            style="color: var(--xcom-teal); font-weight: 900; font-size: 18px;">{{ simResult.pods.length
+                            }}</span></div>
+                    <div v-for="pod in simResult.pods" :key="pod.index" class="pod-card">
+                        <div class="pod-header"><span
+                                :style="{ color: pod.is_leader_pod ? 'var(--xcom-red)' : 'var(--xcom-teal)' }">{{
+                                pod.is_leader_pod ? 'COMMAND POD' : pod.category }}</span><span
+                                style="color: #444;">LEVEL {{ pod.leader_level }}</span></div>
+                        <div class="alien-list">
+                            <div v-for="alien in pod.aliens" class="alien-row">
+                                <div><span v-if="alien.is_main"
+                                        style="color: white; margin-right: 4px;">*</span><span>{{ alien.name }} x{{
+                                        alien.count }}</span></div>
+                                <div><span class="stats-tag">HP {{ alien.hp }}</span><span class="stats-tag">AIM {{
+                                        alien.aim }}</span></div>
+                            </div>
+                            <template v-for="alien in pod.aliens" :key="alien.name">
+                                <div v-if="alien.perks && alien.perks.length > 0" class="alien-perks">{{ alien.name }}
+                                    Perks: {{ alien.perks.slice(0,3).join(', ') }}{{ alien.perks.length > 3 ? '...' :
+                                    ''}}</div>
+                            </template>
+                        </div>
+                    </div>
+                    <button @click="runSimulation" style="width: 100%; margin-top: 10px; opacity: 0.6;">Reroll
+                        Forecast</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const { createApp } = Vue;
+        createApp({
+            data() {
+                return {
+                    files: { strategy: null, core: null },
+                    config: {},
+                    gameCoreConfig: {},
+                    configLoaded: false,
+                    activeCategory: 'global',
+                    activeSectionName: 'XComStrategyAIMutator.XGStrategyAI_Mod',
+                    dragOver: false,
+                    expandedMonths: {},
+                    expandedModifierTypes: {},
+                    scheduleFilters: { month: '', type: '' },
+                    parsedSchedule: {},
+                    simConfig: { mission: 'Abduction', month: 0, resources: 0, difficulty: 1 },
+                    simResult: null,
+                    stats: { characters: 0 },
+                    base_stats: {},
+                    upgrades: [],
+                    scheduleKeys: ['AbductionPodNumbersMonthlyModifiers', 'AbductionPodTypesMonthlyModifiers', 'TerrorPodNumbersMonthlyModifiers', 'TerrorPodTypesMonthlyModifiers', 'UFOPodTypesMonthlyModifiers', 'BigUFOPodTypesMonthlyModifiers', 'SpecialPodTypesMonthlyModifiers', 'CommandersMonthlyModifiers', 'SoldiersMonthlyModifiers', 'SpecialMonthlyModifiers', 'TerroristsMonthlyModifiers', 'ElitesMonthlyModifiers', 'ExaltMonthlyModifiers', 'ExaltEliteMonthlyModifiers'],
+                    categories: [{ id: 'global', label: 'Global Settings' }, { id: 'missions', label: 'Mission Rules' }, { id: 'pods', label: 'Pod Definitions' }, { id: 'schedule', label: 'Monthly Progression' }, { id: 'other', label: 'Other' }],
+                    constants: {
+                        eChars: ['eChar_Sectoid', 'eChar_Drone', 'eChar_Floater', 'eChar_ThinMan', 'eChar_Muton', 'eChar_MutonBerserker', 'eChar_Cyberdisc', 'eChar_SectoidCommander', 'eChar_Sectopit', 'eChar_MutonElite', 'eChar_Ethereal', 'eChar_FloaterHeavy', 'eChar_Chryssalid', 'eChar_Zombie', 'eChar_Outsider', 'eChar_Mechtoid', 'eChar_Seeker', 'eChar_ExaltGoon', 'eChar_ExaltSniper', 'eChar_ExaltHeavy', 'eChar_ExaltMedic', 'eChar_ExaltEliteGoon', 'eChar_ExaltEliteSniper', 'eChar_ExaltEliteHeavy', 'eChar_ExaltEliteMedic'],
+                        eShips: ['eShip_UFO_Small', 'eShip_UFO_Medium', 'eShip_UFO_Large', 'eShip_UFO_VeryLarge', 'eShip_UFO_Fighter', 'eShip_UFO_Scout', 'eShip_UFO_Transport', 'eShip_UFO_Harvester', 'eShip_UFO_Abductor', 'eShip_UFO_TerrorShip', 'eShip_UFO_Battleship', 'eShip_UFO_Overseer'],
+                        ePodTypes: ['EPodTypeMod_Commander', 'EPodTypeMod_Soldier', 'EPodTypeMod_Terrorist', 'EPodTypeMod_Special', 'EPodTypeMod_Elite', 'EPodTypeMod_Exalt', 'EPodTypeMod_ExaltElite', 'EPodTypeMod_UFO', 'EPodTypeMod_BigUFO']
+                    }
+                };
+            },
+            computed: {
+                activeCategoryLabel() { const c = this.categories.find(x => x.id === this.activeCategory); return c ? c.label : ''; },
+                currentCategoryItems() {
+                    const data = this.config[this.activeSectionName]; if (!data) return {};
+                    const res = {}; for (const [k, v] of Object.entries(data)) if (this.categorizeKey(k) === this.activeCategory) res[k] = v;
+                    return res;
+                },
+                sortedMonths() { return Object.keys(this.parsedSchedule).map(Number).sort((a, b) => a - b); },
+                filteredMonths() {
+                    let m = this.sortedMonths; if (this.scheduleFilters.month !== '') m = m.filter(x => x === parseInt(this.scheduleFilters.month));
+                    return m;
+                }
+            },
+            methods: {
+                triggerFileUpload() { document.getElementById('fileInput').click(); },
+                handleFileUpload(e) { [...e.target.files].forEach(file => this.readAnyFile(file)); },
+                handleFileDrop(e) { this.dragOver = false;[...e.dataTransfer.files].forEach(file => this.readAnyFile(file)); },
+                readAnyFile(file) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        const content = ev.target.result;
+                        if (file.name.includes('Strategy')) this.files.strategy = content;
+                        else if (file.name.includes('GameCore')) this.files.core = content;
+                        else {
+                            if (content.includes('XComStrategyAIMutator')) this.files.strategy = content;
+                            else if (content.includes('BalanceMods')) this.files.core = content;
+                        }
+                    };
+                    reader.readAsText(file);
+                },
+                confirmInit() {
+                    if (!this.files.strategy) return;
+                    this.config = IniParser.parse(this.files.strategy);
+                    if (this.files.core) {
+                        this.gameCoreConfig = IniParser.parse(this.files.core);
+                        this.extractGameCoreData();
+                    }
+                    this.buildScheduleView();
+                    this.configLoaded = true;
+                    this.runSimulation();
+                },
+                extractGameCoreData() {
+                    const characters = this.gameCoreConfig['XComGame.XGGameCore']?.['Characters'];
+                    if (characters) {
+                        characters.forEach(s => {
+                            const struct = IniParser.parseStructToObj(s);
+                            if (struct.iType) this.base_stats[struct.iType] = struct;
+                        });
+                        this.stats.characters = Object.keys(this.base_stats).length;
+                    }
+                    const upgrades = this.gameCoreConfig['XComGame.XGGameCore']?.['BalanceMods_Hard'];
+                    if (upgrades) this.upgrades = upgrades.map(s => IniParser.parseStructToObj(s));
+                },
+                downloadConfig() {
+                    this.reconstructConfigFromSchedule();
+                    const blob = new Blob([IniParser.generate(this.config)], { type: 'text/plain' });
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = 'DefaultStrategyAIMod.ini';
+                    a.click();
+                },
+                reconstructConfigFromSchedule() {
+                    this.scheduleKeys.forEach(k => { this.config[this.activeSectionName][k] = []; });
+                    this.sortedMonths.forEach(m => {
+                        const mData = this.parsedSchedule[m] || {};
+                        for (const [key, items] of Object.entries(mData)) {
+                            items.forEach(obj => {
+                                const kvList = [];
+                                if (obj.ID !== undefined) kvList.push(`ID=${obj.ID}`);
+                                kvList.push(`Month=${m}`);
+                                for (const [fk, fv] of Object.entries(obj)) {
+                                    if (['ID', 'Month', '_originalIndex', '_parsed', '_raw'].includes(fk)) continue;
+                                    kvList.push(`${fk}=${fv}`);
+                                }
+                                this.config[this.activeSectionName][key].push(`(${kvList.join(',')})`);
+                            });
+                        }
+                    });
+                },
+                runSimulation() {
+                    this.simResult = SimEngine.run(this.config, this.base_stats, this.upgrades, this.simConfig);
+                },
+                queueSimulationUpdate() { if (this.simTimeout) clearTimeout(this.simTimeout); this.simTimeout = setTimeout(() => this.runSimulation(), 400); },
+                buildScheduleView() {
+                    const data = this.config[this.activeSectionName]; if (!data) return;
+                    const sch = {};
+                    for (const [k, v] of Object.entries(data)) {
+                        if (this.categorizeKey(k) === 'schedule' && Array.isArray(v)) {
+                            v.forEach((s, i) => {
+                                const m = (s.match(/Month=(\d+)/) || [0, 0])[1];
+                                if (!sch[m]) sch[m] = {}; if (!sch[m][k]) sch[m][k] = [];
+                                sch[m][k].push({ _raw: s, _originalIndex: i, _parsed: false });
+                            });
+                        }
+                    }
+                    this.parsedSchedule = sch;
+                },
+                getFilteredMonthItems(m) {
+                    const it = this.parsedSchedule[m] || {};
+                    if (this.scheduleFilters.type) {
+                        const res = {}; if (it[this.scheduleFilters.type]) res[this.scheduleFilters.type] = this.parseScheduleItems(it[this.scheduleFilters.type]);
+                        return res;
+                    }
+                    const res = {}; for (const [k, v] of Object.entries(it)) res[k] = this.parseScheduleItems(v);
+                    return res;
+                },
+                parseScheduleItems(arr) { return arr.map(x => { if (x._parsed) return x; const o = IniParser.parseStructToObj(x._raw); o._parsed = true; o._originalIndex = x._originalIndex; return o; }); },
+                isSelectionField(k, v) {
+                    if (k === 'ID') return (v && String(v).startsWith('EPodTypeMod_')) ? 'ePodTypes' : null;
+                    if (k.includes('Alien') || (k.startsWith('Possible') && !k.includes('Chance'))) return 'eChars';
+                    if (k.includes('Ship')) return 'eShips';
+                    if (k.includes('PodType')) return 'ePodTypes';
+                    return null;
+                },
+                isBooleanField(k, v) { return (typeof v === 'boolean' || v === "true" || v === "false" || (typeof k === 'string' && k.toLowerCase().startsWith('enable'))); },
+                categorizeKey(k) {
+                    if (k.includes('MonthlyModifiers')) return 'schedule';
+                    if (k.startsWith('Possible')) return 'pods';
+                    if (k.endsWith('PodNumbers') || k.endsWith('PodTypes')) return 'missions';
+                    if (k.startsWith('Exclude') || k.startsWith('Diff') || k.startsWith('Enable')) return 'global';
+                    return 'other';
+                },
+                getCategoryCount(id) { const d = this.config[this.activeSectionName]; return d ? Object.keys(d).filter(k => this.categorizeKey(k) === id).length : 0; },
+                getCategoryDescription() { return { global: "Game rules and scaling.", missions: "Mission pod rules.", pods: "Alien compositions.", schedule: "Progression.", other: "Misc." }[this.activeCategory] || ""; },
+                formatKey(k) { return k.replace(/([A-Z])/g, ' $1').trim(); },
+                toggleMonth(m) { this.expandedMonths[m] = !this.expandedMonths[m]; },
+                toggleModifierType(m, k) { const id = m + '_' + k; this.expandedModifierTypes[id] = !this.expandedModifierTypes[id]; },
+                clearScheduleFilters() { this.scheduleFilters.month = ''; this.scheduleFilters.type = ''; },
+                getStructSum(kv) { let s = 0;['MainChance', 'Support1Chance', 'Support2Chance', 'TypeChance'].forEach(k => { const f = kv.find(x => x.k === k); if (f) s += parseInt(f.v) || 0; }); return s; },
+                isObjectDict(v) { return v && typeof v === 'object' && !Array.isArray(v); },
+                isStructString(v) { return typeof v === 'string' && v.trim().startsWith('('); },
+                updateStruct(sec, k, i, f, nv) {
+                    const p = IniParser.parseStructKV(this.config[sec][k][i]);
+                    const t = p.find(x => x.k === f);
+                    if (t) { t.v = nv; this.config[sec][k][i] = "(" + p.map(x => `${x.k}=${x.v}`).join(',') + ")"; this.queueSimulationUpdate(); }
+                },
+                updateArrayStruct(sec, k, i, f, nv) { this.updateStruct(sec, k, i, f, nv); },
+                deleteScheduleItem(k, oi) {
+                    if (!confirm("Delete?")) return;
+                    for (const m in this.parsedSchedule) {
+                        const a = this.parsedSchedule[m][k];
+                        if (a) { const x = a.findIndex(y => y._originalIndex === oi); if (x !== -1) { a.splice(x, 1); this.runSimulation(); return; } }
+                    }
+                },
+                resolveReference(key, id) {
+                    const bm = { 'SoldiersMonthlyModifiers': 'PossibleSoldiers', 'TerroristsMonthlyModifiers': 'PossibleTerrorists', 'CommandersMonthlyModifiers': 'PossibleCommanders' };
+                    const bk = bm[key]; if (!bk) return "Entry";
+                    const ba = this.config[this.activeSectionName]?.[bk]; if (!ba) return "Entry";
+                    const it = ba[id] || ba[String(id)]; if (!it) return "Entry";
+                    const c = it.split(';')[1]; if (c) return c.trim();
+                    const s = IniParser.parseStructKV(it); return s.find(x => x.k === 'MainAlien')?.v.replace('eChar_', '') || "Entry";
+                },
+                resetConfig() { if (confirm("Reset?")) location.reload(); }
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>
