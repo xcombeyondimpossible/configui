@@ -7,7 +7,7 @@
     <title>XCOM Strategy AI Configurator - Static</title>
     <meta name="description" content="Configure and simulate XCOM Long War Strategy AI settings">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="js/xcom-logic.js"></script>
+    <script type="module" src="js/xcom-logic.js"></script>
     <style>
         :root {
             --xcom-dark: #0a0e14;
@@ -291,15 +291,12 @@
         }
 
         .alien-list {
-            font-size: 11px;
-            color: #aaa;
+            margin-top: 10px;
         }
 
         .alien-row {
-            padding: 4px 0;
-            border-bottom: 1px solid #222;
-            display: flex;
-            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .alien-perks {
@@ -349,6 +346,72 @@
             color: #888;
             margin-left: 4px;
         }
+
+        /* Tooltip style */
+        .tooltip-container {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: #666;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: help;
+            transition: all 0.2s;
+        }
+
+        .tooltip-container:hover .help-icon {
+            background: var(--xcom-teal);
+            color: #000;
+        }
+
+        .tooltip-text {
+            visibility: hidden;
+            width: 220px;
+            background-color: #1a1f26;
+            color: #fff;
+            text-align: left;
+            border-radius: 4px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -110px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 11px;
+            line-height: 1.4;
+            border: 1px solid var(--xcom-teal);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+        }
+
+        .tooltip-container:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--xcom-teal) transparent transparent transparent;
+        }
     </style>
 </head>
 
@@ -378,8 +441,17 @@
                 <input type="file" id="fileInput" accept=".ini" multiple style="display:none"
                     @change="handleFileUpload">
             </div>
-            <button v-if="files.strategy" @click="confirmInit"
-                style="margin-top: 25px; font-size: 14px; padding: 12px 30px;">Enter Editor</button>
+            <div style="display: flex; gap: 20px; align-items: center; margin-top: 25px;">
+                <button v-if="files.strategy" @click="confirmInit" style="font-size: 14px; padding: 12px 30px;">Enter
+                    Editor</button>
+                <div v-else style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                    <button @click="loadDefaults"
+                        style="font-size: 14px; padding: 12px 30px; background: rgba(0, 217, 255, 0.1); border: 1px solid var(--xcom-teal); color: var(--xcom-teal);">Load
+                        Defaults</button>
+                    <span style="font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 1px;">Start
+                        with repo configs</span>
+                </div>
+            </div>
         </div>
         <div v-else class="workspace">
             <div class="sidebar">
@@ -476,17 +548,22 @@
                                         v-if="isStructString(item) && getStructSum(IniParser.parseStructKV(item)) > 0"
                                         :style="{ color: getStructSum(IniParser.parseStructKV(item)) === 100 ? 'var(--xcom-teal)' : 'var(--xcom-orange)' }"
                                         style="font-size: 11px; font-weight: bold;">Sum: {{
-                                        getStructSum(IniParser.parseStructKV(item)) }}%</span></div>
+                                        getStructSum(IniParser.parseStructKV(item)) }}%</span>
+                                </div>
                                 <div v-if="isStructString(item)">
                                     <div v-for="field in IniParser.parseStructKV(item)" :key="field.k" class="form-row">
-                                        <label>{{ field.k }}</label><select v-if="isSelectionField(field.k, field.v)"
-                                            v-model="field.v"
+                                        <label class="tooltip-container">
+                                            {{ field.k }}
+                                            <span v-if="getTooltip(field.k)" class="help-icon">?</span>
+                                            <span v-if="getTooltip(field.k)" class="tooltip-text">{{ getTooltip(field.k)
+                                                }}</span>
+                                        </label><select v-if="isSelectionField(field.k, field.v)" v-model="field.v"
                                             @change="updateStruct(activeSectionName, key, idx, field.k, $event.target.value)">
                                             <option
                                                 v-if="!constants[isSelectionField(field.k, field.v)].includes(field.v) && field.v"
-                                                :value="field.v">{{ field.v }}</option>
+                                                :value="field.v">{{ formatName(field.v) }}</option>
                                             <option v-for="opt in constants[isSelectionField(field.k, field.v)]"
-                                                :key="opt" :value="opt">{{ opt }}</option>
+                                                :key="opt" :value="opt">{{ formatName(opt) }}</option>
                                         </select><select v-else-if="isBooleanField(field.k, field.v)" v-model="field.v"
                                             @change="updateStruct(activeSectionName, key, idx, field.k, $event.target.value)">
                                             <option value="True">True</option>
@@ -508,7 +585,7 @@
                                             v-model="field.v"
                                             @change="updateArrayStruct(activeSectionName, key, idx, field.k, $event.target.value)">
                                             <option v-for="opt in constants[isSelectionField(field.k, field.v)]"
-                                                :key="opt" :value="opt">{{ opt }}</option>
+                                                :key="opt" :value="opt">{{ formatName(opt) }}</option>
                                         </select><input v-else type="text" v-model="field.v"
                                             @change="updateArrayStruct(activeSectionName, key, idx, field.k, $event.target.value)">
                                     </div>
@@ -518,8 +595,13 @@
                                         @change="queueSimulationUpdate"></div>
                             </div>
                         </div>
-                        <div v-else class="form-row"><label>{{ key }}</label><input
-                                v-model="config[activeSectionName][key]" type="text" @change="queueSimulationUpdate">
+                        <div v-else class="form-row">
+                            <label class="tooltip-container">
+                                {{ formatKey(key) }}
+                                <span v-if="getTooltip(key)" class="help-icon">?</span>
+                                <span v-if="getTooltip(key)" class="tooltip-text">{{ getTooltip(key) }}</span>
+                            </label>
+                            <input v-model="config[activeSectionName][key]" type="text" @change="queueSimulationUpdate">
                         </div>
                     </div>
                 </div>
@@ -538,15 +620,34 @@
                         <label>Mission</label><select v-model="simConfig.mission" @change="runSimulation">
                             <option value="Abduction">Abduction</option>
                             <option value="Terror">Terror</option>
-                            <option value="UFO">Landed UFO</option>
-                            <option value="Special">Special Op</option>
-                        </select></div>
+                            <option value="UFO">Small/Medium UFO</option>
+                            <option value="BigUFO">Large/Very Large UFO</option>
+                            <option value="Special">Special Council Op</option>
+                            <option value="Extraction">Exalt Extraction</option>
+                            <option value="CaptureAndHold">Exalt Data Recovery</option>
+                            <option value="ExaltRaid">Exalt Base Raid</option>
+                            <option value="AlienBase">Alien Base Assault</option>
+                        </select>
+                    </div>
+                    <div v-if="simConfig.mission === 'UFO' || simConfig.mission === 'BigUFO'" class="form-row"
+                        style="grid-template-columns: 80px 1fr; margin-bottom: 10px;">
+                        <label>UFO Class</label><select v-model.number="simConfig.shipSize" @change="runSimulation">
+                            <option :value="0">Small Scout</option>
+                            <option :value="1">Large Scout</option>
+                            <option :value="2">Abductor</option>
+                            <option :value="3">Supply Ship</option>
+                            <option :value="4">Battleship</option>
+                            <option :value="5">Overseer</option>
+                        </select>
+                    </div>
                     <div class="form-row" style="grid-template-columns: 80px 1fr; margin-bottom: 10px;">
                         <label>Month</label><input type="number" v-model.number="simConfig.month" @input="runSimulation"
-                            min="0" max="15"></div>
+                            min="0" max="15">
+                    </div>
                     <div class="form-row" style="grid-template-columns: 80px 1fr; margin-bottom: 0;">
                         <label>Resources</label><input type="number" v-model.number="simConfig.resources"
-                            @input="runSimulation" step="10"></div>
+                            @input="runSimulation" step="10">
+                    </div>
                 </div>
                 <div v-if="simResult">
                     <div
@@ -554,25 +655,31 @@
                         <span style="font-size: 11px; color: #666; font-weight: bold; text-transform: uppercase;">Total
                             Pods detected:</span><span
                             style="color: var(--xcom-teal); font-weight: 900; font-size: 18px;">{{ simResult.pods.length
-                            }}</span></div>
+                            }}</span>
+                    </div>
                     <div v-for="pod in simResult.pods" :key="pod.index" class="pod-card">
                         <div class="pod-header"><span
                                 :style="{ color: pod.is_leader_pod ? 'var(--xcom-red)' : 'var(--xcom-teal)' }">{{
                                 pod.is_leader_pod ? 'COMMAND POD' : pod.category }}</span><span
                                 style="color: #444;">LEVEL {{ pod.leader_level }}</span></div>
                         <div class="alien-list">
-                            <div v-for="alien in pod.aliens" class="alien-row">
-                                <div><span v-if="alien.is_main"
-                                        style="color: white; margin-right: 4px;">*</span><span>{{ alien.name }} x{{
-                                        alien.count }}</span></div>
-                                <div><span class="stats-tag">HP {{ alien.hp }}</span><span class="stats-tag">AIM {{
-                                        alien.aim }}</span></div>
+                            <div v-for="alien in pod.aliens" :key="alien.name" class="alien-row">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span
+                                        :style="{ color: alien.isLeader ? 'var(--xcom-orange)' : '#fff', fontWeight: alien.isLeader ? 'bold' : 'normal' }">{{
+                                        alien.name }}</span>
+                                    <div style="font-size: 10px; display: flex; gap: 8px; opacity: 0.8;">
+                                        <span>HP: {{ alien.hp }}</span>
+                                        <span>Aim: {{ alien.aim }}</span>
+                                        <span v-if="alien.damage > 0">Dmg: +{{ alien.damage }}</span>
+                                        <span>Will: {{ alien.will }}</span>
+                                    </div>
+                                </div>
+                                <div v-if="alien.perks && alien.perks.length > 0" class="alien-perks"
+                                    style="font-size: 9px; margin-top: 2px;">
+                                    {{ alien.perks.join(', ') }}
+                                </div>
                             </div>
-                            <template v-for="alien in pod.aliens" :key="alien.name">
-                                <div v-if="alien.perks && alien.perks.length > 0" class="alien-perks">{{ alien.name }}
-                                    Perks: {{ alien.perks.slice(0,3).join(', ') }}{{ alien.perks.length > 3 ? '...' :
-                                    ''}}</div>
-                            </template>
                         </div>
                     </div>
                     <button @click="runSimulation" style="width: 100%; margin-top: 10px; opacity: 0.6;">Reroll
@@ -581,7 +688,8 @@
             </div>
         </div>
     </div>
-    <script>
+    <script type="module">
+        import { IniParser, SimEngine } from './js/xcom-logic.js';
         const { createApp } = Vue;
         createApp({
             data() {
@@ -597,7 +705,7 @@
                     expandedModifierTypes: {},
                     scheduleFilters: { month: '', type: '' },
                     parsedSchedule: {},
-                    simConfig: { mission: 'Abduction', month: 0, resources: 0, difficulty: 1 },
+                    simConfig: { mission: 'Abduction', month: 0, resources: 0, difficulty: 1, shipSize: 0 },
                     simResult: null,
                     stats: { characters: 0 },
                     base_stats: {},
@@ -608,7 +716,29 @@
                         eChars: ['eChar_Sectoid', 'eChar_Drone', 'eChar_Floater', 'eChar_ThinMan', 'eChar_Muton', 'eChar_MutonBerserker', 'eChar_Cyberdisc', 'eChar_SectoidCommander', 'eChar_Sectopit', 'eChar_MutonElite', 'eChar_Ethereal', 'eChar_FloaterHeavy', 'eChar_Chryssalid', 'eChar_Zombie', 'eChar_Outsider', 'eChar_Mechtoid', 'eChar_Seeker', 'eChar_ExaltGoon', 'eChar_ExaltSniper', 'eChar_ExaltHeavy', 'eChar_ExaltMedic', 'eChar_ExaltEliteGoon', 'eChar_ExaltEliteSniper', 'eChar_ExaltEliteHeavy', 'eChar_ExaltEliteMedic'],
                         eShips: ['eShip_UFO_Small', 'eShip_UFO_Medium', 'eShip_UFO_Large', 'eShip_UFO_VeryLarge', 'eShip_UFO_Fighter', 'eShip_UFO_Scout', 'eShip_UFO_Transport', 'eShip_UFO_Harvester', 'eShip_UFO_Abductor', 'eShip_UFO_TerrorShip', 'eShip_UFO_Battleship', 'eShip_UFO_Overseer'],
                         ePodTypes: ['EPodTypeMod_Commander', 'EPodTypeMod_Soldier', 'EPodTypeMod_Terrorist', 'EPodTypeMod_Special', 'EPodTypeMod_Elite', 'EPodTypeMod_Exalt', 'EPodTypeMod_ExaltElite', 'EPodTypeMod_UFO', 'EPodTypeMod_BigUFO']
-                    }
+                    },
+                    tooltips: {
+                        EnableAlienResources: "If enabled, your current 'Resources' value scales the number of aliens in each pod.",
+                        EnableAlienResearch: "If enabled, monthly progression is based on research points (month * 28). If disabled, it uses calendar months.",
+                        EnableAlienLeaders: "Enables 'Leader' aliens with massively boosted HP, Aim, and unique perks.",
+                        EnableRandomCommanders: "Allows UFO commanders to be randomly selected from a list of species.",
+                        AlwaysSpawnAtLeastOneMainAlien: "Ensures that every pod contains at least one unit of its primary species (e.g., at least one Muton in a Muton pod).",
+                        LeaderLevelProgressionMultiplier: "Controls how fast alien leader levels increase relative to research progression.",
+                        AdditionalAliensPerPodMultiplier: "How many extra aliens spawn per 100 Alien Resources.",
+                        DiffProbabilityDivisor: "Divides pod spawn chances if their 'PodDifficulty' exceeds the mission's difficulty.",
+                        PodDifficulty: "Minimum mission difficulty or UFO size required for this pod to spawn at its full 'PodChance'.",
+                        PodLimit: "Maximum number of times this specific alien configuration can appear in a single mission.",
+                        MainChance: "Weight of the primary alien species when filling out the pod's slots.",
+                        Support1Chance: "Weight of the first support species when filling out the pod's slots.",
+                        Support2Chance: "Weight of the second support species when filling out the pod's slots.",
+                        PodChance: "Relative weight of this pod configuration appearing compared to others in the same pool.",
+                        MinAliens: "The minimum number of aliens to roll for this pod (before resource scaling).",
+                        MaxAliens: "The maximum number of aliens to roll for this pod (before resource scaling).",
+                        LeaderLevel: "Forced leader level for this pod. -1 means it will be rolled based on research.",
+                        ID: "The technical index or identifier for this configuration entry."
+                    },
+                    IniParser,
+                    SimEngine
                 };
             },
             computed: {
@@ -641,8 +771,23 @@
                     };
                     reader.readAsText(file);
                 },
+                async loadDefaults() {
+                    try {
+                        const stratRes = await fetch('./defaults/DefaultStrategyAIMod.ini');
+                        const coreRes = await fetch('./defaults/DefaultGameCore.ini');
+                        if (stratRes.ok) this.files.strategy = await stratRes.text();
+                        if (coreRes.ok) this.files.core = await coreRes.text();
+                        else console.warn("Could not find DefaultGameCore.ini, continuing with strategy only.");
+                        this.confirmInit();
+                    } catch (e) {
+                        alert("Failed to load defaults: " + e.message);
+                    }
+                },
                 confirmInit() {
-                    if (!this.files.strategy) return;
+                    if (!this.files.strategy) {
+                        alert("Missing Strategy AI INI! Please drop your 'DefaultStrategyAIMod.ini' into the app first.");
+                        return;
+                    }
                     this.config = IniParser.parse(this.files.strategy);
                     if (this.files.core) {
                         this.gameCoreConfig = IniParser.parse(this.files.core);
@@ -761,8 +906,18 @@
                     const ba = this.config[this.activeSectionName]?.[bk]; if (!ba) return "Entry";
                     const it = ba[id] || ba[String(id)]; if (!it) return "Entry";
                     const c = it.split(';')[1]; if (c) return c.trim();
-                    const s = IniParser.parseStructKV(it); return s.find(x => x.k === 'MainAlien')?.v.replace('eChar_', '') || "Entry";
+                    const s = IniParser.parseStructKV(it); return this.formatName(s.find(x => x.k === 'MainAlien')?.v) || "Entry";
                 },
+                formatName(n) {
+                    if (!n) return '';
+                    return String(n)
+                        .replace('eChar_', '')
+                        .replace('eShip_', '')
+                        .replace('EPodTypeMod_', '')
+                        .replace(/_/g, ' ')
+                        .trim();
+                },
+                getTooltip(key) { return this.tooltips[key] || null; },
                 resetConfig() { if (confirm("Reset?")) location.reload(); }
             }
         }).mount('#app');

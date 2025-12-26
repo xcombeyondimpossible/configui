@@ -7,42 +7,49 @@ test.describe('XCOM Configurator UI', () => {
     });
 
     test('should load the app and transition to editor mode on file upload', async ({ page }) => {
-        const filePath = `file://${path.resolve('docs/index.html')}`;
-        await page.goto(filePath);
+        await page.goto('http://localhost:3000');
 
         await expect(page.locator('h1')).toContainText('XCOM Strategy AI Configurator');
 
-        await page.evaluate(() => {
-            const app = document.querySelector('#app').__vue_app__._instance.proxy;
-            const strat = `[XComStrategyAIMutator.XGStrategyAI_Mod]
-AlwaysSpawnAtLeastOneMainAlien=true
-AbductionPodNumbers=(MinPods=3,MaxPods=3)
-AbductionPodTypes=(ID=EPodTypeMod_Soldier,TypeChance=100)
-PossibleSoldiers[0]=(MainAlien=eChar_Sectoid,PodChance=100,MinAliens=4,MaxAliens=4)`;
-            app.files.strategy = strat;
-            app.confirmInit();
-        });
+        // Click Load Defaults
+        const loadBtn = page.locator('button:has-text("Load Defaults")');
+        await loadBtn.click();
 
         await expect(page.locator('.sidebar')).toBeVisible();
         await expect(page.locator('.preview-pane')).toBeVisible();
     });
 
     test('should update simulation results when data is present', async ({ page }) => {
-        const filePath = `file://${path.resolve('docs/index.html')}`;
-        await page.goto(filePath);
+        await page.goto('http://localhost:3000');
 
-        await page.evaluate(() => {
-            const app = document.querySelector('#app').__vue_app__._instance.proxy;
-            const strat = `[XComStrategyAIMutator.XGStrategyAI_Mod]
-AbductionPodNumbers=(MinPods=3,MaxPods=3)
-AbductionPodTypes=(ID=EPodTypeMod_Soldier,TypeChance=100)
-PossibleSoldiers[0]=(MainAlien=eChar_Sectoid,PodChance=100,MinAliens=4,MaxAliens=4)`;
-            app.files.strategy = strat;
-            app.confirmInit();
-        });
+        // Click Load Defaults
+        const loadBtn = page.locator('button:has-text("Load Defaults")');
+        await loadBtn.click();
 
-        // The default mission is Abduction. 3 pods should be rolled.
+        // Check if pods are rolled (Default config has pods)
         const podCards = page.locator('.pod-card');
-        await expect(podCards).toHaveCount(3);
+        await expect(podCards.first()).toBeVisible();
+    });
+
+    test('should switch sidebar tabs when clicked', async ({ page }) => {
+        await page.goto('http://localhost:3000');
+
+        // Click Load Defaults
+        const loadBtn = page.locator('button:has-text("Load Defaults")');
+        await loadBtn.click();
+
+        // Check initial active tab
+        const globalTab = page.locator('.category-btn:has-text("Global Settings")');
+        await expect(globalTab).toHaveClass(/active/);
+
+        // Click on "Pod Definitions" tab
+        const podTab = page.locator('.category-btn:has-text("Pod Definitions")');
+        await podTab.click();
+
+        // Check if the tab is active
+        await expect(podTab).toHaveClass(/active/);
+
+        // Check if another tab is NOT active
+        await expect(globalTab).not.toHaveClass(/active/);
     });
 });

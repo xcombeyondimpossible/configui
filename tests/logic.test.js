@@ -83,3 +83,21 @@ describe('XCOM Simulation Engine', () => {
         expect(res.pods[0].aliens[0].name).toBe('Sectoid');
     });
 });
+
+describe('XCOM Logic Resilience', () => {
+    test('IniParser should not throw on empty/null input', () => {
+        expect(() => IniParser.parse(null)).not.toThrow();
+        expect(() => IniParser.parse("")).not.toThrow();
+        expect(IniParser.parse("")).toEqual({});
+    });
+
+    test('SimEngine should not throw on empty config', () => {
+        expect(() => SimEngine.run({}, {}, [], { mission: 'Abduction', month: 0, resources: 0 })).not.toThrow();
+    });
+
+    test('IniParser.parseStructToObj should handle malformed structs', () => {
+        const malformed = "This is not a struct";
+        expect(() => IniParser.parseStructToObj(malformed)).not.toThrow();
+        expect(IniParser.parseStructToObj(malformed)).toEqual({});
+    });
+});

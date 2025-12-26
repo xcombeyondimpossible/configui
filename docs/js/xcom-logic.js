@@ -93,6 +93,7 @@ export const SimEngine = {
         const enableResources = getBool('EnableAlienResources', true);
         const alwaysSpawnMain = getBool('AlwaysSpawnAtLeastOneMainAlien', true);
         const diffDecreaseProb = getBool('DiffDecreaseProbability', false);
+        const podDiffMult = parseFloat(getVal('PodsDifficultyMultiplier', ["1.0"])[0]);
 
         // Leader Level Roll Logic from .uc
         const rollLeaderLevel = (forced = -1) => {
@@ -104,31 +105,105 @@ export const SimEngine = {
             return Math.min(Math.max(rNum, 0), 7);
         };
 
-        // 1. Pod Numbers
-        const base_map = { Abduction: "AbductionPodNumbers", Terror: "TerrorPodNumbers", UFO: "UFOPodNumbers", Special: "SpecialPodNumbers" };
-        const mod_map = { Abduction: "AbductionPodNumbersMonthlyModifiers", Terror: "TerrorPodNumbersMonthlyModifiers", UFO: "UFOPodNumbersMonthlyModifiers", Special: "SpecialPodNumbersMonthlyModifiers" };
+        const calculateStats = (type, researchVal, leaderLevel, isLeader) => {
+            const base = base_stats[type] || { HP: "4", Offense: "65", Will: "30" };
+            let hp = parseInt(base.HP || 4);
+            let aim = parseInt(base.Offense || 65);
+            let damage = 0;
+            let will = parseInt(base.Will || 30);
+            const perks = [];
 
-        const baseStr = getVal(base_map[simConfig.mission], ["(MinPods=1,MaxPods=4)"])[0];
+            upgrades.forEach(up => {
+                if (up.eType === type) {
+                    const crit = parseInt(up.iCritHit || 0);
+                    // Research Bonus (crit >= 15)
+                    if (crit >= 15) {
+                        if (researchVal >= Math.floor(crit / 100)) {
+                            hp += parseInt(up.iHP || 0);
+                            aim += parseInt(up.iAim || 0);
+                            damage += parseInt(up.iDamage || 0);
+                            will += parseInt(up.iWill || 0);
+                            const perkId = parseInt(up.iMobility || 0);
+                            if (perkId > 0 && !perks.includes(this.perkMap[perkId] || `Perk ${perkId}`)) {
+                                perks.push(this.perkMap[perkId] || `Perk ${perkId}`);
+                            }
+                        }
+                    }
+                    // Leader Bonus (crit < 15)
+                    else if (isLeader && leaderLevel >= crit) {
+                        hp += parseInt(up.iHP || 0);
+                        aim += parseInt(up.iAim || 0);
+                        damage += parseInt(up.iDamage || 0);
+                        will += parseInt(up.iWill || 0);
+                        const perkId = parseInt(up.iMobility || 0);
+                        if (perkId > 0 && !perks.includes(this.perkMap[perkId] || `Perk ${perkId}`)) {
+                            perks.push(this.perkMap[perkId] || `Perk ${perkId}`);
+                        }
+                    }
+                }
+            });
+
+            // Random variation (Rolling)
+            const hpRoll = rnd(3) - 1; // -1, 0, +1
+            const aimRoll = rnd(5) - 2; // -2 to +2
+
+            return {
+                hp: hp + hpRoll,
+                aim: aim + aimRoll,
+                damage,
+                will,
+                perks
+            };
+        };
+
+        // 1. Pod Numbers
+        const missionMap = {
+            Abduction: { base: "AbductionPodNumbers", mod: "AbductionPodNumbersMonthlyModifiers", type: "AbductionPodTypes", typeMod: "AbductionPodTypesMonthlyModifiers" },
+            Terror: { base: "TerrorPodNumbers", mod: "TerrorPodNumbersMonthlyModifiers", type: "TerrorPodTypes", typeMod: "TerrorPodTypesMonthlyModifiers" },
+            UFO: { base: "UFOPodNumbers", mod: "UFOPodNumbersMonthlyModifiers", type: "UFOPodTypes", typeMod: "UFOPodTypesMonthlyModifiers" },
+            BigUFO: { base: "UFOPodNumbers", mod: "UFOPodNumbersMonthlyModifiers", type: "BigUFOPodTypes", typeMod: "BigUFOPodTypesMonthlyModifiers" },
+            Special: { base: "SpecialPodNumbers", mod: "SpecialPodNumbersMonthlyModifiers", type: "SpecialPodTypes", typeMod: "SpecialPodTypesMonthlyModifiers" },
+            Extraction: { base: "ExtractionPodNumbers", mod: "ExtractionPodNumbersMonthlyModifiers", type: "ExtractionPodTypes", typeMod: "ExtractionPodTypesMonthlyModifiers" },
+            CaptureAndHold: { base: "CaptureAndHoldPodNumbers", mod: "CaptureAndHoldPodNumbersMonthlyModifiers", type: "CaptureAndHoldPodTypes", typeMod: "CaptureAndHoldPodTypesMonthlyModifiers" },
+            ExaltRaid: { base: "ExaltRaidPodNumbers", mod: null, type: "ExaltRaidPodTypes", typeMod: null },
+            AlienBase: { base: "AlienBasePodNumbers", mod: null, type: "AlienBasePodTypes", typeMod: null }
+        };
+
+        const mInfo = missionMap[simConfig.mission] || missionMap.Abduction;
+        const baseStr = getVal(mInfo.base, ["(MinPods=1,MaxPods=4)"])[0];
         const base = IniParser.parseStructToObj(baseStr);
         let minP = parseInt(base.MinPods || 1), maxP = parseInt(base.MaxPods || 4);
 
-        getVal(mod_map[simConfig.mission], []).forEach(ms => {
-            const m = IniParser.parseStructToObj(ms);
-            if (parseInt(m.Month) <= month) {
-                if (m.MinPods !== undefined && m.MinPods !== "-1") minP = parseInt(m.MinPods);
-                if (m.MaxPods !== undefined && m.MaxPods !== "-1") maxP = parseInt(m.MaxPods);
-            }
-        });
+        if (mInfo.mod) {
+            getVal(mInfo.mod, []).forEach(ms => {
+                const m = IniParser.parseStructToObj(ms);
+                if (parseInt(m.Month) <= month) {
+                    if (m.MinPods !== undefined && m.MinPods !== "-1") minP = parseInt(m.MinPods);
+                    if (m.MaxPods !== undefined && m.MaxPods !== "-1") maxP = parseInt(m.MaxPods);
+                }
+            });
+        }
 
-        const numPods = rollInterval(minP, maxP);
+        let podModifier = 0;
+        let effectiveDifficulty = simConfig.difficulty || 1;
+
+        if (simConfig.mission === 'Abduction') {
+            podModifier = Math.floor((effectiveDifficulty - 2) * podDiffMult);
+        } else if (simConfig.mission === 'UFO' || simConfig.mission === 'BigUFO') {
+            const shipSize = simConfig.shipSize || 0;
+            const shipSizeMult = parseFloat(getVal('ShipSizeMultiplier', ["1.0"])[0]);
+            podModifier = Math.floor(shipSize * shipSizeMult);
+            effectiveDifficulty = shipSize;
+        }
+
+        const numPods = rollInterval(minP, maxP) + podModifier;
 
         // 2. Pod Categories
-        const type_map = { Abduction: "AbductionPodTypes", Terror: "TerrorPodTypes", UFO: "UFOPodTypes", Special: "SpecialPodTypes" };
-        const type_mod_map = { Abduction: "AbductionPodTypesMonthlyModifiers", Terror: "TerrorPodTypesMonthlyModifiers", UFO: "UFOPodTypesMonthlyModifiers", Special: "SpecialPodTypesMonthlyModifiers" };
-
         const chances = {};
-        getVal(type_map[simConfig.mission], []).forEach(ts => { const t = IniParser.parseStructToObj(ts); chances[t.ID] = parseInt(t.TypeChance || 0); });
-        getVal(type_mod_map[simConfig.mission], []).forEach(ms => { const m = IniParser.parseStructToObj(ms); if (parseInt(m.Month) <= month && m.TypeChance !== "-1") chances[m.ID] = parseInt(m.TypeChance); });
+        getVal(mInfo.type, []).forEach(ts => { const t = IniParser.parseStructToObj(ts); chances[t.ID] = parseInt(t.TypeChance || 0); });
+        if (mInfo.typeMod) {
+            getVal(mInfo.typeMod, []).forEach(ms => { const m = IniParser.parseStructToObj(ms); if (parseInt(m.Month) <= month && m.TypeChance !== "-1") chances[m.ID] = parseInt(m.TypeChance); });
+        }
 
         const ids = Object.keys(chances), weights = Object.values(chances);
         const podCategories = [];
@@ -143,7 +218,7 @@ export const SimEngine = {
             for (let i = 0; i < numPods; i++) podCategories.push('EPodTypeMod_Soldier');
         }
 
-        if (simConfig.mission === 'UFO' && podCategories.length > 0) {
+        if ((simConfig.mission === 'UFO' || simConfig.mission === 'BigUFO') && podCategories.length > 0) {
             podCategories.pop();
             podCategories.push('EPodTypeMod_Commander');
         }
@@ -183,7 +258,6 @@ export const SimEngine = {
                 }
             });
 
-            // Apply limits and difficulty scaling
             const weightedPool = pool.filter(s => {
                 const cid = `${cat}_${s._id}`;
                 const count = counters[cid] || 0;
@@ -191,10 +265,9 @@ export const SimEngine = {
                 if (limit > -1 && count >= limit) return false;
 
                 const podDiff = parseInt(s.PodDifficulty || 0);
-                const missionDiff = simConfig.difficulty || 1;
-                if (podDiff > missionDiff) {
+                if (podDiff > effectiveDifficulty) {
                     if (diffDecreaseProb && diffProbDiv > 0) {
-                        s.PodChance = Math.floor(parseInt(s.PodChance) / (diffProbDiv * (podDiff - missionDiff)));
+                        s.PodChance = Math.floor(parseInt(s.PodChance) / (diffProbDiv * (podDiff - effectiveDifficulty)));
                     } else {
                         return false;
                     }
@@ -213,50 +286,57 @@ export const SimEngine = {
             counters[cid] = (counters[cid] || 0) + 1;
 
             const baseCount = rollInterval(parseInt(group.MinAliens || 1), parseInt(group.MaxAliens || 3));
-            let count = baseCount;
+            let totalCount = baseCount;
             if (enableResources) {
-                count += Math.floor(resources * aliensPerPodMult);
+                totalCount += Math.floor(resources * aliensPerPodMult);
             }
-            count = Math.min(8, count);
+            totalCount = Math.min(8, Math.max(1, totalCount));
 
-            let m = 0, s1 = 0, s2 = 0;
-            for (let i = 0; i < count; i++) {
-                const mc = (m > 0) ? 0 : parseInt(group.MainChance || 100);
-                const sum = mc + parseInt(group.Support1Chance || 100) + parseInt(group.Support2Chance || 100);
-                const r = rnd(sum);
-                if (r < mc) m++; else if (r < mc + parseInt(group.Support1Chance)) s1++; else s2++;
-            }
-            if (alwaysSpawnMain && m === 0 && count > 0) { m = 1; if (s1 > s2) s1--; else s2--; }
-
-            const aliens = [];
-            [[group.MainAlien, m], [group.SupportAlien1, s1], [group.SupportAlien2, s2]].forEach(([type, c]) => {
-                if (!type || type === 'eChar_None' || c <= 0) return;
-                const stats = base_stats[type] || { HP: "4", Offense: "65", Will: "30" };
-                let hp = parseInt(stats.HP || 4), aim = parseInt(stats.Offense || 65), damage = 0;
-                const perks = [];
-
-                upgrades.forEach(up => {
-                    if (up.eType === type) {
-                        const crit = parseInt(up.iCritHit || 0);
-                        if ((crit % 100) >= 15 && research >= Math.floor(crit / 100)) {
-                            hp += parseInt(up.iHP || 0); aim += parseInt(up.iAim || 0); damage += parseInt(up.iDamage || 0);
-                            const pid = parseInt(up.iMobility || 0);
-                            if (pid > 0) perks.push(this.perkMap[pid] || `Perk ${pid}`);
-                        }
-                    }
-                });
-                aliens.push({ name: type.replace('eChar_', ''), count: c, hp, aim, damage, perks, is_main: type === group.MainAlien });
-            });
-
+            const podAliens = [];
             const l_level = rollLeaderLevel(parseInt(group.LeaderLevel || -1));
-            results.pods.push({ index: pIdx + 1, category: cat.replace('EPodTypeMod_', ''), aliens, leader_level: l_level, is_leader_pod: cat === 'EPodTypeMod_Commander' });
+
+            // Determine composition proportions
+            let mainN = 0, s1N = 0, s2N = 0;
+            for (let i = 0; i < totalCount; i++) {
+                const mc = (mainN > 0) ? 0 : parseInt(group.MainChance || 100);
+                const s1c = parseInt(group.Support1Chance || 100);
+                const s2c = parseInt(group.Support2Chance || 100);
+                const roll = rnd(mc + s1c + s2c);
+                if (roll < mc) mainN++; else if (roll < mc + s1c) s1N++; else s2N++;
+            }
+            if (alwaysSpawnMain && mainN === 0) { mainN = 1; if (s1N > s2N) s1N--; else s2N--; }
+
+            // Generate individual alien records for "Rolling" feel
+            const addAliens = (type, count, isLeaderCandidate) => {
+                if (!type || type === 'eChar_None' || count <= 0) return;
+                for (let i = 0; i < count; i++) {
+                    const isLeader = isLeaderCandidate && i === 0;
+                    const s = calculateStats(type, research, l_level, isLeader);
+                    podAliens.push({
+                        name: (isLeader ? "[Leader] " : "") + type.replace('eChar_', ''),
+                        isLeader,
+                        ...s
+                    });
+                }
+            };
+
+            addAliens(group.MainAlien, mainN, true);
+            addAliens(group.SupportAlien1, s1N, false);
+            addAliens(group.SupportAlien2, s2N, false);
+
+            results.pods.push({
+                index: pIdx + 1,
+                category: cat.replace('EPodTypeMod_', ''),
+                aliens: podAliens,
+                leader_level: l_level,
+                is_leader_pod: cat === 'EPodTypeMod_Commander'
+            });
         });
 
         return results;
     }
 };
 
-// Export for both ESM and Global (window)
 if (typeof window !== 'undefined') {
     window.IniParser = IniParser;
     window.SimEngine = SimEngine;
