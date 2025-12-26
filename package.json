@@ -2,6 +2,7 @@
     "name": "xcom-strategy-ai-sim",
     "version": "1.0.0",
     "scripts": {
-        "dev": "python3 app.py"
+        "dev": "python3 app.py",
+        "start": "pkill -f 'python3 app.py' || true; python3 app.py"
     }
 }

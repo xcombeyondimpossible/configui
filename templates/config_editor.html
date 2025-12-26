@@ -13,6 +13,7 @@
             --xcom-card: #151b23;
             --xcom-text: #e0e0e0;
             --xcom-border: #2d333b;
+            --xcom-highlight: rgba(0, 255, 212, 0.1);
         }
 
         body {
@@ -25,6 +26,64 @@
             flex-direction: column;
         }
 
+        /* Layout */
+        .workspace {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #0d1219;
+            border-right: 1px solid var(--xcom-border);
+            display: flex;
+            flex-direction: column;
+            padding: 20px 0;
+        }
+
+        .category-btn {
+            padding: 15px 20px;
+            cursor: pointer;
+            color: #888;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 14px;
+            border-left: 4px solid transparent;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .category-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .category-btn.active {
+            color: var(--xcom-teal);
+            background: var(--xcom-highlight);
+            border-left: 4px solid var(--xcom-teal);
+        }
+
+        .editor-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+            background: #11161d;
+        }
+
+        .preview-pane {
+            width: 350px;
+            background: #0d1219;
+            border-left: 1px solid var(--xcom-border);
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Components */
         .toolbar {
             border-bottom: 2px solid var(--xcom-teal);
             padding: 10px 20px;
@@ -32,50 +91,68 @@
             justify-content: space-between;
             align-items: center;
             background: rgba(0, 255, 212, 0.05);
-        }
-
-        .main-content {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        .editor-pane,
-        .preview-pane {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            border-right: 1px solid var(--xcom-border);
-        }
-
-        .editor-pane {
-            background: #0d1219;
-            flex: 1.2;
+            z-index: 10;
         }
 
         .section-card {
             background: var(--xcom-card);
             border: 1px solid var(--xcom-border);
             margin-bottom: 20px;
-            padding: 15px;
+            padding: 20px;
             border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
 
-        .section-title {
+        h2.page-title {
+            color: white;
+            border-bottom: 1px solid #333;
+            margin-top: 0;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        h4 {
             color: var(--xcom-teal);
-            font-weight: bold;
+            margin: 15px 0 10px 0;
             text-transform: uppercase;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 8px;
-            margin-bottom: 15px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
+            font-size: 13px;
+            letter-spacing: 1px;
         }
 
-        h2 {
-            margin: 0;
-            font-size: 16px;
+        .config-item {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 15px;
+        }
+
+        label {
+            font-size: 13px;
+            color: #aaa;
+            text-align: right;
+        }
+
+        input,
+        select {
+            background: #05080a;
+            border: 1px solid #333;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 2px;
+            font-family: inherit;
+        }
+
+        input:focus {
+            border-color: var(--xcom-teal);
+            outline: none;
         }
 
         button {
@@ -89,222 +166,316 @@
             border-radius: 2px;
         }
 
+        button:hover {
+            filter: brightness(1.1);
+        }
+
         button.danger {
             background: #ff0055;
             color: white;
         }
 
-        /* Form Inputs */
-        input,
-        select {
-            background: #05080a;
-            border: 1px solid var(--xcom-border);
-            color: white;
-            padding: 4px;
-            width: 100%;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            margin-bottom: 8px;
-            align-items: center;
+        /* Struct/Array rendering */
+        .array-container {
+            display: flex;
+            flex-direction: column;
             gap: 10px;
         }
 
-        label {
-            font-size: 12px;
-            color: #888;
-        }
-
         .array-item {
-            border-left: 2px solid var(--xcom-teal);
-            padding-left: 10px;
-            margin-bottom: 15px;
             background: rgba(255, 255, 255, 0.02);
+            border: 1px solid #333;
             padding: 10px;
+            border-left: 3px solid #555;
         }
 
-        /* Preview Pane Styles (Copied partially from index.html) */
+        .array-item:hover {
+            border-left-color: var(--xcom-teal);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        /* Preview specific */
         .pod-card {
             background: var(--xcom-card);
             border: 1px solid var(--xcom-border);
-            border-left: 4px solid var(--xcom-teal);
+            border-left: 3px solid var(--xcom-teal);
             padding: 10px;
             margin-bottom: 10px;
         }
 
-        .alien-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .alien-item {
+        .pod-header {
+            font-weight: bold;
+            color: var(--xcom-teal);
             display: flex;
             justify-content: space-between;
-            border-bottom: 1px solid #333;
-            padding: 4px 0;
+            font-size: 12px;
+            margin-bottom: 5px;
         }
 
-        .alien-stats {
-            font-size: 10px;
-            color: #888;
-            margin-top: 4px;
-        }
-
-        .main-nav {
+        /* Schedule Styles */
+        .section-title {
+            cursor: pointer;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
             display: flex;
-            background: #0d1219;
-            border-bottom: 2px solid var(--xcom-border);
-        }
-
-        .nav-tab {
-            padding: 15px 30px;
-            color: #888;
-            text-decoration: none;
-            text-transform: uppercase;
+            justify-content: space-between;
             font-weight: bold;
-            font-size: 14px;
-            border-right: 1px solid var(--xcom-border);
-            transition: all 0.2s;
         }
 
-        .nav-tab:hover {
-            color: var(--xcom-teal);
-            background: rgba(0, 255, 212, 0.05);
-        }
-
-        .nav-tab.active {
-            color: var(--xcom-bg);
-            background: var(--xcom-teal);
+        .section-title:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
     </style>
 </head>
 
 <body>
     <div id="app">
-        <div class="main-nav">
-            <a href="/" class="nav-tab">Mission Simulator</a>
-            <a href="/editor" class="nav-tab active">Config Editor</a>
-        </div>
+        <!-- Top Toolbar -->
         <div class="toolbar">
-            <div style="font-weight: bold; font-size: 18px; color: var(--xcom-teal);">
-                STRATEGY AI CONFIGURATOR
+            <div style="font-weight: bold; font-size: 18px; color: var(--xcom-teal); display:flex; align-items:center;">
+                <span
+                    style="background:var(--xcom-teal); color:black; padding:2px 8px; margin-right:10px; font-size:14px; border-radius:3px;">MOD</span>
+                STRATEGY AI EDITOR
             </div>
             <div style="display: flex; gap: 10px;">
-                <span v-if="saving"
-                    style="color:#aaa; display:flex; align-items:center; margin-right:10px;">Saving...</span>
-                <button class="danger" @click="revertToOriginal">Revert to Factory</button>
+                <span v-if="saving" style="color:#aaa; display:flex; align-items:center; margin-right:10px;">
+                    Saving...
+                </span>
+                <button class="danger" @click="revertToOriginal">Factory Reset</button>
                 <button @click="saveConfig">Save Changes</button>
             </div>
         </div>
 
-        <div class="main-content">
-            <!-- Left: Editor Pane -->
-            <div class="editor-pane">
-                <div v-if="error" style="color:red; border:1px solid red; padding:10px; margin-bottom:10px;">
-                    ERROR: {% raw %}{{ error }}{% endraw %}
+        <div class="workspace">
+            <!-- Sidebar Navigation -->
+            <div class="sidebar">
+                <div v-for="cat in categories" :key="cat.id" class="category-btn"
+                    :class="{ active: activeCategory === cat.id }" @click="activeCategory = cat.id">
+                    <span>{% raw %}{{ cat.label }}{% endraw %}</span>
+                    <span style="opacity:0.3; font-size:12px;">{% raw %}{{ getCategoryCount(cat.id) }}{% endraw
+                        %}</span>
                 </div>
-                <div v-if="loading">Loading Config...</div>
+            </div>
 
-                <div v-else>
-                    <!-- Iterate Top Level Sections -->
-                    <div v-for="(content, sectionName) in config" :key="sectionName" class="section-card">
-                        <div class="section-title" @click="toggleSection(sectionName)">
-                            <h2>{% raw %}{{ sectionName }}{% endraw %}</h2>
-                            <span>{% raw %}{{ expandedSections[sectionName] ? '[-]' : '[+]' }}{% endraw %}</span>
-                        </div>
+            <!-- Schedule Pane (Special Layout) -->
+            <div v-if="activeCategory === 'schedule'" class="editor-area">
+                <h2 class="page-title">Monthly Progression</h2>
+                <div style="margin-bottom:20px; color:#888; font-size:13px; font-style:italic;">
+                    Configure how the alien invasion scales over time. Each month can override settings from the base
+                    configuration.
+                    <br><strong style="color:var(--xcom-teal);">Note:</strong> Settings are automatically sorted by
+                    Month on save to ensure game logic works correctly.
+                </div>
 
-                        <div v-if="expandedSections[sectionName]">
-                            <div v-for="(val, key) in content" :key="key">
+                <!-- Filter TODO -->
+                <!-- TODO: Add a search filter input here that fuzzy matches the setting keys/titles below -->
 
-                                <!-- Array of Objects (nested structs) -->
-                                <div v-if="isObjectDict(val)">
-                                    <h4 style="color:#888; margin: 10px 0;">{% raw %}{{ key }}{% endraw %} (Map)</h4>
-                                    <div v-for="(item, idx) in val" :key="idx" class="array-item">
-                                        <div style="font-size:11px;color:var(--xcom-teal);margin-bottom:5px;">Index {%
-                                            raw %}{{idx}}{% endraw %}</div>
-                                        <!-- Struct Fields -->
-                                        <div v-for="field in parseStruct(item)" :key="field.k" class="form-row">
-                                            <label>{% raw %}{{ field.k }}{% endraw %}</label>
-                                            <input v-model="field.v"
-                                                @change="updateStruct(sectionName, key, idx, field.k, $event.target.value)">
-                                        </div>
-                                    </div>
+                <!-- Add New Month/Setting Button -->
+                <div
+                    style="margin-bottom:20px; background:#1a2029; padding:15px; border:1px dashed #444; border-radius:4px;">
+                    <h4 style="margin-top:0;">Add Monthly Override</h4>
+                    <div style="display:flex; gap:10px;">
+                        <input type="number" v-model="newOverride.month" placeholder="Month (e.g. 5)"
+                            style="width:80px;">
+                        <select v-model="newOverride.type">
+                            <option value="" disabled>Select Setting Type</option>
+                            <option v-for="key in scheduleKeys" :value="key">{% raw %}{{ formatKey(key) }}{% endraw %}
+                            </option>
+                        </select>
+                        <button @click="addScheduleItem" :disabled="!newOverride.type">Add</button>
+                    </div>
+                </div>
+
+                <!-- Month Grouping -->
+                <div v-for="month in sortedMonths" :key="month" class="section-card">
+                    <div class="section-title" @click="toggleMonth(month)" style="margin-bottom:0;">
+                        <span>MONTH {% raw %}{{ month }}{% endraw %}</span>
+                        <span>{% raw %}{{ expandedMonths[month] ? '[-]' : '[+]' }}{% endraw %}</span>
+                    </div>
+
+                    <div v-if="expandedMonths[month]" style="margin-top:15px;">
+                        <div v-for="(items, key) in getMonthItems(month)" :key="key"
+                            style="margin-bottom:20px; border-left:2px solid #333; padding-left:15px;">
+                            <h5 style="color:var(--xcom-teal); margin:5px 0;">{% raw %}{{ formatKey(key) }}{% endraw %}
+                            </h5>
+
+                            <div v-for="(item, idx) in items" :key="idx" class="array-item" style="position:relative;">
+                                <!-- Delete Button -->
+                                <button class="danger"
+                                    style="position:absolute; right:5px; top:5px; padding:2px 6px; font-size:10px;"
+                                    @click="deleteScheduleItem(key, item._originalIndex)">X</button>
+
+                                <!-- Reference Helper (what are we modifying?) -->
+                                <div v-if="item.ID !== undefined"
+                                    style="font-size:11px; color:#aaa; margin-bottom:5px; font-style:italic;">
+                                    Modifying: <span style="color:white;">{% raw %}{{ resolveReference(key, item.ID)
+                                        }}{% endraw %}</span>
                                 </div>
 
-                                <!-- Standard Arrays (e.g. UFOPodNumbers) -->
-                                <div v-else-if="Array.isArray(val)">
-                                    <h4 style="color:#888; margin: 10px 0;">{% raw %}{{ key }}{% endraw %} (List)</h4>
-                                    <div v-for="(item, i) in val" :key="i" class="array-item">
-                                        <!-- Check if item is a struct-like string -->
-                                        <div v-if="item.startsWith && item.startsWith('(')">
-                                            <div v-for="field in parseStruct(item)" :key="field.k" class="form-row">
-                                                <label>{% raw %}{{ field.k }}{% endraw %}</label>
-                                                <!-- Note: Updating standard arrays is harder because they don't have stable IDs, using index i -->
-                                                <input v-model="field.v"
-                                                    @change="updateArrayStruct(sectionName, key, i, field.k, $event.target.value)">
-                                            </div>
-                                        </div>
-                                        <div v-else>
-                                            <input v-model="config[sectionName][key][i]" @change="runDraftSimulation">
-                                        </div>
-                                    </div>
-                                </div>
+                                <div class="form-row" v-for="(v, k) in item" :key="k">
+                                    <template v-if="k !== '_originalIndex' && k !== 'Month'">
+                                        <label>{% raw %}{{ k }}{% endraw %}</label>
 
-                                <!-- Simple Key-Value -->
-                                <div v-else class="form-row">
-                                    <label>{% raw %}{{ key }}{% endraw %}</label>
-                                    <input v-if="typeof val === 'object'" :value="'[Complex Object]'" disabled>
-                                    <input v-else v-model="content[key]" @change="runDraftSimulation">
-                                </div>
+                                        <select v-if="isSelectionField(k)" v-model="item[k]"
+                                            @change="queueScheduleUpdate">
+                                            <option v-for="opt in constants[isSelectionField(k)]" :value="opt">{% raw
+                                                %}{{opt}}{% endraw %}</option>
+                                        </select>
 
+                                        <input v-else v-model="item[k]" @change="queueScheduleUpdate">
+                                    </template>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Right: Preview Pane -->
-            <div class="preview-pane">
-                <h3 style="color: var(--xcom-teal); margin-top: 0;">LIVE SIMULATION PREVIEW</h3>
+            <!-- Generic Editor Area (For other categories) -->
+            <div v-else class="editor-area">
+                <div v-if="loading" style="color:#888; text-align:center; margin-top:50px;">
+                    Loading Configuration...
+                </div>
+                <div v-else-if="error" style="color:#ff0055; border:1px solid #ff0055; padding:20px;">
+                    ERROR: {% raw %}{{ error }}{% endraw %}
+                </div>
 
-                <div class="section-card">
-                    <div class="form-row">
-                        <label>Mission Type</label>
+                <div v-else>
+                    <h2 class="page-title">{% raw %}{{ getCurrentCategoryLabel() }}{% endraw %}</h2>
+
+                    <!-- Description/Help Text based on category -->
+                    <div style="margin-bottom:20px; color:#888; font-size:13px; font-style:italic;">
+                        {% raw %}{{ getCategoryDescription() }}{% endraw %}
+                    </div>
+
+                    <!-- Config Items Loop -->
+                    <div class="section-card">
+                        <div v-if="Object.keys(currentCategoryItems).length === 0"
+                            style="color:#555; text-align:center; padding:20px;">
+                            No settings found in this category.
+                        </div>
+
+                        <div v-for="(val, key) in currentCategoryItems" :key="key" class="config-item">
+
+                            <!-- 1. Complex Indexed Maps (Object Dicts) -->
+                            <div v-if="isObjectDict(val)">
+                                <h4>{% raw %}{{ formatKey(key) }}{% endraw %}</h4>
+                                <div class="array-container">
+                                    <div v-for="(item, idx) in val" :key="idx" class="array-item">
+                                        <div style="font-size:11px; color:#555; margin-bottom:5px;">ID: {% raw
+                                            %}{{idx}}{% endraw %}</div>
+                                        <div v-for="field in parseStruct(item)" :key="field.k" class="form-row">
+                                            <label>{% raw %}{{ field.k }}{% endraw %}</label>
+
+                                            <select v-if="isSelectionField(field.k)" v-model="field.v"
+                                                @change="updateStruct(activeSectionName, key, idx, field.k, $event.target.value)">
+                                                <option v-for="opt in constants[isSelectionField(field.k)]"
+                                                    :value="opt">{% raw %}{{opt}}{% endraw %}</option>
+                                            </select>
+
+                                            <input v-else v-model="field.v"
+                                                @change="updateStruct(activeSectionName, key, idx, field.k, $event.target.value)">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2. Arrays (Lists) -->
+                            <div v-else-if="Array.isArray(val)">
+                                <h4>{% raw %}{{ formatKey(key) }}{% endraw %}</h4>
+                                <div class="array-container">
+                                    <div v-for="(item, i) in val" :key="i" class="array-item">
+                                        <!-- Struct-like string in array -->
+                                        <div v-if="isStructString(item)">
+                                            <div v-for="field in parseStruct(item)" :key="field.k" class="form-row">
+                                                <label>{% raw %}{{ field.k }}{% endraw %}</label>
+
+                                                <select v-if="isSelectionField(field.k)" v-model="field.v"
+                                                    @change="updateArrayStruct(activeSectionName, key, i, field.k, $event.target.value)">
+                                                    <option v-for="opt in constants[isSelectionField(field.k)]"
+                                                        :value="opt">{% raw %}{{opt}}{% endraw %}</option>
+                                                </select>
+
+                                                <input v-else v-model="field.v"
+                                                    @change="updateArrayStruct(activeSectionName, key, i, field.k, $event.target.value)">
+                                            </div>
+                                        </div>
+                                        <!-- Simple value in array -->
+                                        <div v-else class="form-row">
+                                            <label>Index {% raw %}{{i}}{% endraw %}</label>
+                                            <input v-model="config[activeSectionName][key][i]"
+                                                @change="runDraftSimulation">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3. Simple Key-Value -->
+                            <div v-else class="form-row">
+                                <label style="text-align:left; font-weight:bold; color:var(--xcom-teal);">{% raw %}{{
+                                    formatKey(key) }}{% endraw %}</label>
+                                <input v-if="typeof val === 'boolean'" type="checkbox"
+                                    v-model="config[activeSectionName][key]" @change="runDraftSimulation"
+                                    style="width:20px;">
+                                <input v-else v-model="config[activeSectionName][key]" @change="runDraftSimulation">
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview Pane (Right Sidebar) -->
+            <div class="preview-pane">
+                <h3 style="color: var(--xcom-teal); margin-top: 0; border-bottom:1px solid #333; padding-bottom:10px;">
+                    SIMULATION
+                </h3>
+
+                <div style="background:#111; padding:15px; border-radius:4px; margin-bottom:20px;">
+                    <div class="form-row" style="grid-template-columns: 1fr;">
+                        <label style="text-align:left;">Mission Type</label>
                         <select v-model="simParams.mission_type" @change="runDraftSimulation">
                             <option value="Abduction">Abduction</option>
                             <option value="Terror">Terror</option>
                             <option value="UFO">UFO</option>
                         </select>
                     </div>
-                    <div class="form-row">
-                        <label>Month (0-12)</label>
+                    <div class="form-row" style="grid-template-columns: 1fr;">
+                        <label style="text-align:left;">Month (0-12)</label>
                         <input type="number" v-model.number="simParams.month" @change="updateSimMonth">
                     </div>
-                    <div class="form-row">
-                        <label>Research (~28/mo)</label>
+                    <div class="form-row" style="grid-template-columns: 1fr;">
+                        <label style="text-align:left;">Research Points</label>
                         <input type="number" v-model.number="simParams.research" @change="runDraftSimulation">
+                    </div>
+                    <div class="form-row" style="grid-template-columns: 1fr;">
+                        <label style="text-align:left;">Resources</label>
+                        <input type="number" v-model.number="simParams.resources" @change="runDraftSimulation">
                     </div>
                 </div>
 
                 <div v-if="simResult">
-                    <h4 style="color:white; border-bottom:1px solid #333; padding-bottom:5px;">
-                        RESULT: {% raw %}{{ simResult.num_pods }}{% endraw %} Pods
-                    </h4>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <span style="color:#888;">TOTAL PODS</span>
+                        <span style="font-size:18px; font-weight:bold; color:white;">{% raw %}{{ simResult.num_pods }}{%
+                            endraw %}</span>
+                    </div>
+
                     <div v-for="pod in simResult.pods" :key="pod.index" class="pod-card">
-                        <div
-                            style="font-weight:bold; color:var(--xcom-teal); display:flex; justify-content:space-between;">
+                        <div class="pod-header">
                             <span>{% raw %}{{ pod.category }}{% endraw %}</span>
-                            <span v-if="pod.is_leader_pod" style="color:#ff0055;">COMMANDER</span>
+                            <span v-if="pod.is_leader_pod" style="color:#ff0055;">CMD</span>
                         </div>
-                        <ul class="alien-list">
-                            <li v-for="a in pod.aliens" class="alien-item">
-                                <span :style="a.is_main ? 'color:var(--xcom-teal);font-weight:bold;' : ''">
-                                    {% raw %}{{ a.name }}{% endraw %} x{% raw %}{{ a.count }}{% endraw %}
+                        <div style="font-size:10px; color:#666; margin-bottom:5px;">Difficulty: {% raw
+                            %}{{pod.difficulty_level || 0}}{% endraw %}</div>
+                        <ul style="list-style:none; padding:0; margin:0;">
+                            <li v-for="a in pod.aliens"
+                                style="display:flex; justify-content:space-between; border-bottom:1px solid #222; padding:3px 0;">
+                                <span :style="a.is_main ? 'color:var(--xcom-teal);' : 'color:#aaa;'">
+                                    {% raw %}{{ a.name }}{% endraw %}
                                 </span>
-                                <div style="font-size:10px;">HP: {% raw %}{{a.hp}}{% endraw %} | {% raw %}{{a.aim}}{%
-                                    endraw %}</div>
+                                <span style="background:#222; padding:0 4px; border-radius:2px; font-size:11px;">x{% raw
+                                    %}{{ a.count }}{% endraw %}</span>
                             </li>
                         </ul>
                     </div>
@@ -323,7 +494,15 @@
                     loading: true,
                     error: null,
                     saving: false,
-                    expandedSections: {},
+                    activeCategory: 'global',
+                    categories: [
+                        { id: 'global', label: 'Global Settings' },
+                        { id: 'missions', label: 'Mission Rules' },
+                        { id: 'pods', label: 'Pod Compositions' },
+                        { id: 'schedule', label: 'Monthly Progression' },
+                        { id: 'other', label: 'Other' }
+                    ],
+                    activeSectionName: 'XComStrategyAIMutator.XGStrategyAI_Mod',
                     simParams: {
                         mission_type: 'Abduction',
                         month: 0,
@@ -334,36 +513,295 @@
                         ship_type: 'eShip_UFOSupply'
                     },
                     simResult: null,
-                    debounceTimer: null
+                    debounceTimer: null,
+
+                    // Schedule specific
+                    expandedMonths: {},
+                    parsedSchedule: {}, // { Month: { Key: [Objects] } }
+                    scheduleKeys: [
+                        'AbductionPodNumbersMonthlyModifiers',
+                        'TerrorPodNumbersMonthlyModifiers',
+                        'UFOPodNumbersMonthlyModifiers',
+                        'SpecialPodNumbersMonthlyModifiers',
+                        'ExtractionPodNumbersMonthlyModifiers',
+                        'CaptureAndHoldPodNumbersMonthlyModifiers',
+                        'AbductionPodTypesMonthlyModifiers',
+                        'TerrorPodTypesMonthlyModifiers',
+                        'UFOPodTypesMonthlyModifiers',
+                        'BigUFOPodTypesMonthlyModifiers',
+                        'SpecialPodTypesMonthlyModifiers',
+                        'CommandersMonthlyModifiers',
+                        'SoldiersMonthlyModifiers',
+                        'SpecialMonthlyModifiers',
+                        'TerroristsMonthlyModifiers',
+                        'ElitesMonthlyModifiers',
+                        'ExaltMonthlyModifiers',
+                        'ExaltEliteMonthlyModifiers'
+                    ],
+                    newOverride: { month: 0, type: '' },
+                    dirtySchedule: false,
+                    constants: { eChars: [], eShips: [] }
+                }
+            },
+            computed: {
+                currentCategoryItems() {
+                    const data = this.config[this.activeSectionName];
+                    if (!data) return {};
+
+                    const filtered = {};
+                    for (const [key, val] of Object.entries(data)) {
+                        const type = this.categorizeKey(key);
+                        if (type === this.activeCategory) {
+                            filtered[key] = val;
+                        }
+                    }
+                    return filtered;
+                },
+                sortedMonths() {
+                    return Object.keys(this.parsedSchedule).map(Number).sort((a, b) => a - b);
                 }
             },
             mounted() {
                 this.loadConfig();
-                // Expand the main section by default
-                this.expandedSections['XComStrategyAIMutator.XGStrategyAI_Mod'] = true;
             },
             methods: {
+                toggleMonth(m) {
+                    this.expandedMonths[m] = !this.expandedMonths[m];
+                },
+                getMonthItems(month) {
+                    return this.parsedSchedule[month] || {};
+                },
+                categorizeKey(key) {
+                    if (key.includes('MonthlyModifiers')) return 'schedule';
+                    if (key.startsWith('Possible')) return 'pods';
+                    if (key.endsWith('PodNumbers') || key.endsWith('PodTypes') || key.includes('Forced') || key.includes('Special') || key.includes('Extraction')) return 'missions';
+                    if (key.startsWith('Exclude') || key.startsWith('Diff') || key.startsWith('Enable') || key.includes('Multiplier') || key.includes('Percentage')) return 'global';
+                    if (key === 'SmallestBigUFO' || key === 'AlwaysSpawnAtLeastOneMainAlien') return 'global';
+                    return 'other';
+                },
+                getCategoryCount(catId) {
+                    const data = this.config[this.activeSectionName];
+                    if (!data) return 0;
+                    return Object.keys(data).filter(k => this.categorizeKey(k) === catId).length;
+                },
+                getCurrentCategoryLabel() {
+                    const c = this.categories.find(c => c.id === this.activeCategory);
+                    return c ? c.label : 'Settings';
+                },
+                getCategoryDescription() {
+                    const map = {
+                        global: "Core game rules, scaling multipliers, and feature toggles.",
+                        missions: "Define how many pods spawn and which pod types are allowed for each mission.",
+                        pods: "Define the composition of specific pods (Leader types, support aliens).",
+                        schedule: "The monthly evolution of the alien threat. Overrides base settings based on research month.",
+                        other: "Miscellaneous settings."
+                    };
+                    return map[this.activeCategory] || "";
+                },
+                formatKey(key) {
+                    // Start of regex fun to make CamelCase readable
+                    return key.replace(/([A-Z])/g, ' $1').trim();
+                },
                 async loadConfig() {
                     try {
                         const res = await fetch('/api/config');
                         if (!res.ok) throw new Error(`HTTP ${res.status}`);
                         this.config = await res.json();
+
+                        // Load constants
+                        const constRes = await fetch('/api/constants');
+                        if (constRes.ok) this.constants = await constRes.json();
+
                         this.loading = false;
+
+                        // After load, pre-process schedule
+                        this.buildScheduleView();
+
                         this.runDraftSimulation();
                     } catch (e) {
                         this.error = e.message;
                         this.loading = false;
                     }
                 },
+                isSelectionField(key) {
+                    if (key.includes('Alien') || (key.includes('Possible') && !key.includes('Chance'))) return 'eChars';
+                    if (key.includes('Ship')) return 'eShips';
+                    return null;
+                },
+                buildScheduleView() {
+                    // Extract all MonthlyModifier arrays and group by month
+                    const data = this.config[this.activeSectionName];
+                    const schedule = {};
+                    // Reset keys to dynamic
+                    this.scheduleKeys = [];
+
+                    for (const [key, val] of Object.entries(data)) {
+                        if (this.categorizeKey(key) === 'schedule' && Array.isArray(val)) {
+                            this.scheduleKeys.push(key);
+                            val.forEach((itemStr, idx) => {
+                                // Parse struct
+                                const obj = {};
+                                const pairs = this.parseStructKV(itemStr);
+                                pairs.forEach(p => obj[p.k] = p.v);
+                                obj._originalIndex = idx;
+
+                                const m = parseInt(obj.Month || 0);
+                                if (!schedule[m]) schedule[m] = {};
+                                if (!schedule[m][key]) schedule[m][key] = [];
+                                schedule[m][key].push(obj);
+                            });
+                        }
+                    }
+                    this.parsedSchedule = schedule;
+
+                    // Default expand first active month
+                    const firstM = this.sortedMonths[0];
+                    if (firstM !== undefined) this.expandedMonths[firstM] = true;
+                },
+                queueScheduleUpdate() {
+                    this.dirtySchedule = true;
+                },
+                addScheduleItem() {
+                    const m = this.newOverride.month;
+                    const type = this.newOverride.type;
+
+                    if (!this.parsedSchedule[m]) this.parsedSchedule[m] = {};
+                    if (!this.parsedSchedule[m][type]) this.parsedSchedule[m][type] = [];
+
+                    // Create default object based on type
+                    const newObj = { Month: m, _originalIndex: -1 }; // -1 indicates new
+
+                    // Heuristics for default fields
+                    if (type.includes('PodNumbers')) {
+                        newObj.MinPods = "3"; newObj.MaxPods = "4";
+                    } else if (type.includes('PodTypes')) {
+                        newObj.ID = "EPodTypeMod_Soldier"; newObj.TypeChance = "50";
+                    } else if (type.includes('MonthlyModifiers')) { // Soldiers, etc
+                        newObj.ID = "0"; newObj.PodChance = "50";
+                    }
+
+                    this.parsedSchedule[m][type].push(newObj);
+                    this.expandedMonths[m] = true;
+                    this.dirtySchedule = true;
+                },
+                deleteScheduleItem(key, originalIdx) {
+                    if (!confirm("Delete this override?")) return;
+
+                    for (const m in this.parsedSchedule) {
+                        if (this.parsedSchedule[m][key]) {
+                            const arr = this.parsedSchedule[m][key];
+                            const i = arr.findIndex(x => x._originalIndex === originalIdx);
+                            // If it's a new item, _originalIndex is -1. 
+                            // This is a weak delete if there are multiple new items.
+                            // But for now, it's sufficient for basic editing.
+                            if (i !== -1) {
+                                arr.splice(i, 1);
+                                this.dirtySchedule = true;
+                                return;
+                            }
+                        }
+                    }
+                },
+
+                resolveReference(key, id) {
+                    // Try to find what ID=X maps to in the base config
+                    // e.g. SoldiersMonthlyModifiers -> PossibleSoldiers
+                    const baseKeyMap = {
+                        'SoldiersMonthlyModifiers': 'PossibleSoldiers',
+                        'TerroristsMonthlyModifiers': 'PossibleTerrorists',
+                        'CommandersMonthlyModifiers': 'PossibleCommanders',
+                        'ElitesMonthlyModifiers': 'PossibleElites',
+                        'ExaltMonthlyModifiers': 'PossibleExalt',
+                        'ExaltEliteMonthlyModifiers': 'PossibleExaltElite',
+                        'SpecialMonthlyModifiers': 'PossibleSpecial'
+                    };
+
+                    const baseKey = baseKeyMap[key];
+                    if (!baseKey) return '';
+
+                    const baseArr = this.config[this.activeSectionName][baseKey];
+                    if (!baseArr) return '';
+
+                    // ID might be index
+                    const idx = parseInt(id);
+                    if (isNaN(idx) || !baseArr[idx]) return '';
+
+                    // The base item is a string, let's look for comment!
+                    const str = baseArr[idx];
+                    if (str.includes(';')) return str.split(';')[1].trim();
+
+                    // Fallback to parsing content
+                    return str.substring(0, 30) + '...';
+                },
+
                 async saveConfig() {
                     this.saving = true;
+
+                    // Reconstruct Config from Schedule if modified
+                    if (this.parsedSchedule && Object.keys(this.parsedSchedule).length > 0) {
+                        // 1. Clear original arrays
+                        this.scheduleKeys.forEach(k => {
+                            this.config[this.activeSectionName][k] = [];
+                        });
+
+                        // 2. Collect all items, flat
+                        const allItems = {}; // key -> []
+
+                        // Iterate sorted months to enforce sort order!!
+                        this.sortedMonths.forEach(m => {
+                            const monthData = this.parsedSchedule[m];
+                            for (const [key, items] of Object.entries(monthData)) {
+                                if (!allItems[key]) allItems[key] = [];
+                                items.forEach(obj => {
+                                    // ensure month is correct
+                                    obj.Month = m;
+                                    allItems[key].push(obj);
+                                });
+                            }
+                        });
+
+                        // 3. Serialize back to strings
+                        for (const [key, items] of Object.entries(allItems)) {
+                            // "items" is now sorted by Month because we iterated sortedMonths
+                            const strArray = items.map(obj => {
+                                const kvList = [];
+                                // ID first convention
+                                if (obj.ID !== undefined) kvList.push(`ID=${obj.ID}`);
+                                kvList.push(`Month=${obj.Month}`);
+
+                                for (const [k, v] of Object.entries(obj)) {
+                                    if (k === 'ID' || k === 'Month' || k === '_originalIndex') continue;
+                                    kvList.push(`${k}=${v}`);
+                                }
+                                return `(${kvList.join(',')})`;
+                            });
+                            this.config[this.activeSectionName][key] = strArray;
+                        }
+                    }
+
                     await fetch('/api/config', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(this.config)
                     });
+
+                    this.loading = false;
                     this.saving = false;
-                    alert("Config Saved to Disk!");
+                    this.dirtySchedule = false;
+                    alert("Config Saved to Disk! (Schedule Automatically Sorted)");
+
+                    // Reload to refresh indices
+                    this.loadConfig();
+                },
+
+                parseStructKV(str) {
+                    if (!str || typeof str !== 'string') return [];
+                    const content = str.split(';')[0].trim().replace(/^\((.*)\)$/, '$1');
+                    return content.split(',').map(pair => {
+                        const parts = pair.split('=');
+                        if (parts.length < 2) return null;
+                        return { k: parts[0].trim(), v: parts[1].trim() };
+                    }).filter(p => p !== null);
                 },
                 async revertToOriginal() {
                     if (!confirm("Are you sure? This will wipe all your custom changes.")) return;
@@ -371,12 +809,12 @@
                     const data = await res.json();
                     if (data.status === 'reverted') {
                         this.config = data.config;
+                        this.buildScheduleView();
                         this.runDraftSimulation();
                         alert("Reverted to Original Factory Settings.");
                     }
                 },
                 async runDraftSimulation() {
-                    // Debounce to prevent spam during typing
                     if (this.debounceTimer) clearTimeout(this.debounceTimer);
                     this.debounceTimer = setTimeout(async () => {
                         const res = await fetch('/api/simulate_draft', {
@@ -390,48 +828,30 @@
                         this.simResult = await res.json();
                     }, 500);
                 },
-                toggleSection(name) {
-                    this.expandedSections[name] = !this.expandedSections[name];
-                },
                 isObjectDict(val) {
-                    // Python sends indexed dicts like {"0": "...", "1": "..."}
                     return typeof val === 'object' && val !== null && !Array.isArray(val);
                 },
+                isStructString(val) {
+                    return typeof val === 'string' && val.trim().startsWith('(');
+                },
                 parseStruct(str) {
-                    // Turns "(A=1,B=2)" into [{k:'A',v:'1'}, {k:'B',v:'2'}]
-                    if (!str || typeof str !== 'string') return [];
-                    const content = str.replace(/^\((.*)\)$/, '$1');
-                    return content.split(',').map(pair => {
-                        const parts = pair.split('=');
-                        if (parts.length < 2) return null;
-                        const [k, v] = parts;
-                        return { k: k.trim(), v: v.trim() };
-                    }).filter(p => p !== null);
+                    return this.parseStructKV(str);
                 },
                 updateStruct(section, key, idx, field, newVal) {
-                    // Reassemble the struct string
-                    // This is "lazy" parsing; ideally we'd parse fully into objects, but maintaining string format is safer for now
                     const oldStr = this.config[section][key][idx];
-                    const pairs = this.parseStruct(oldStr);
+                    const pairs = this.parseStructKV(oldStr);
                     const target = pairs.find(p => p.k === field);
-                    if (target) target.v = newVal;
-
-                    const newStr = "(" + pairs.map(p => `${p.k}=${p.v}`).join(',') + ")";
-                    this.config[section][key][idx] = newStr;
-                    this.runDraftSimulation();
+                    if (target) {
+                        target.v = newVal;
+                        const newStr = "(" + pairs.map(p => `${p.k}=${p.v}`).join(',') + ")";
+                        this.config[section][key][idx] = newStr;
+                        this.runDraftSimulation();
+                    }
                 },
                 updateArrayStruct(section, key, idx, field, newVal) {
-                    // Same as updateStruct but for Array indices
-                    const oldStr = this.config[section][key][idx];
-                    const pairs = this.parseStruct(oldStr);
-                    const target = pairs.find(p => p.k === field);
-                    if (target) target.v = newVal;
-                    const newStr = "(" + pairs.map(p => `${p.k}=${p.v}`).join(',') + ")";
-                    this.config[section][key][idx] = newStr;
-                    this.runDraftSimulation();
+                    this.updateStruct(section, key, idx, field, newVal);
                 },
                 updateSimMonth() {
-                    // Update research heuristic
                     this.simParams.research = this.simParams.month * 28;
                     this.runDraftSimulation();
                 }

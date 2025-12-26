@@ -76,5 +76,22 @@ def roll():
     result = sim.get_mission_data(mission_type, research, resources, difficulty, landed, ship_type)
     return jsonify(result)
 
+@app.route('/api/constants', methods=['GET'])
+def api_constants():
+    # Return useful constants for dropdowns
+    # eChars: extracted from sim.base_stats keys (which come from DefaultGameCore.ini)
+    e_chars = sorted(list(sim.base_stats.keys()))
+    
+    # Static lists for other types if needed (e.g. ship types)
+    e_ships = [
+        "eShip_UFOSmallScout", "eShip_UFOLargeScout", "eShip_UFOAbductor", 
+        "eShip_UFOSupply", "eShip_UFOBattle", "eShip_UFOEthereal", "eShip_UFOOverseer"
+    ]
+    
+    return jsonify({
+        "eChars": e_chars,
+        "eShips": e_ships
+    })
+
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
