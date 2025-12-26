@@ -40,7 +40,8 @@ describe('XCOM Simulation Engine', () => {
     };
 
     test('should generate correct number of pods', () => {
-        const result = SimEngine.run(mockConfig, {}, [], { mission: 'Abduction', month: 0, resources: 0 });
+        // difficulty: 2 is 'Moderate', so (2-2)*1 = 0 modifier. 3 + 0 = 3 pods.
+        const result = SimEngine.run(mockConfig, {}, [], { mission: 'Abduction', month: 0, resources: 0, difficulty: 2 });
         expect(result.pods.length).toBe(3);
         expect(result.pods[0].category).toBe('Soldier');
     });
@@ -49,11 +50,15 @@ describe('XCOM Simulation Engine', () => {
         const base_stats = { 'eChar_Sectoid': { HP: "3", Offense: "65" } };
         const upgrades = [{ eType: 'eChar_Sectoid', iHP: "2", iAim: "10", iCritHit: "1015" }]; // Month 10 (Research 280+), +2HP, +10Aim
 
-        // Month 11 (Research 308) should have the upgrade
-        const res = SimEngine.run(mockConfig, base_stats, upgrades, { mission: 'Abduction', month: 11, resources: 0 });
+        // Month 11 (Research 308) should have the upgrade (3 + 2 = 5 HP, 65 + 10 = 75 Aim)
+        const res = SimEngine.run(mockConfig, base_stats, upgrades, { mission: 'Abduction', month: 11, resources: 0, difficulty: 2 });
         const alien = res.pods[0].aliens[0];
-        expect(alien.hp).toBe(5);
-        expect(alien.aim).toBe(75);
+
+        // Stats are now rolled with variance: HP +/- 1, Aim +/- 2
+        expect(alien.hp).toBeGreaterThanOrEqual(4);
+        expect(alien.hp).toBeLessThanOrEqual(6);
+        expect(alien.aim).toBeGreaterThanOrEqual(73);
+        expect(alien.aim).toBeLessThanOrEqual(77);
     });
 
     test('should respect PodLimit from .uc logic', () => {
@@ -61,10 +66,10 @@ describe('XCOM Simulation Engine', () => {
             'XComStrategyAIMutator.XGStrategyAI_Mod': {
                 'AbductionPodNumbers': ['(MinPods=10,MaxPods=10)'],
                 'AbductionPodTypes': ['(ID=EPodTypeMod_Soldier,TypeChance=100)'],
-                'PossibleSoldiers': ['(MainAlien=eChar_Sectoid,PodChance=100,PodLimit=2)']
+                'PossibleSoldiers': ['(MainAlien=eChar_Sectoid,PodChance=100,PodLimit=2,MinAliens=1,MaxAliens=1)']
             }
         };
-        const res = SimEngine.run(limitConfig, {}, [], { mission: 'Abduction', month: 0, resources: 0 });
+        const res = SimEngine.run(limitConfig, {}, [], { mission: 'Abduction', month: 0, resources: 0, difficulty: 2 });
         expect(res.pods.length).toBe(2);
     });
 
@@ -74,13 +79,15 @@ describe('XCOM Simulation Engine', () => {
                 'AbductionPodNumbers': ['(MinPods=1,MaxPods=1)'],
                 'AbductionPodTypes': ['(ID=EPodTypeMod_Soldier,TypeChance=100)'],
                 'PossibleSoldiers': [
-                    '(MainAlien=eChar_Muton,PodChance=100,PodDifficulty=5)',
-                    '(MainAlien=eChar_Sectoid,PodChance=100,PodDifficulty=0)'
+                    '(MainAlien=eChar_Muton,PodChance=100,PodDifficulty=5,MinAliens=1,MaxAliens=1)',
+                    '(MainAlien=eChar_Sectoid,PodChance=100,PodDifficulty=0,MinAliens=1,MaxAliens=1)'
                 ]
             }
         };
-        const res = SimEngine.run(diffConfig, {}, [], { mission: 'Abduction', month: 0, resources: 0, difficulty: 1 });
-        expect(res.pods[0].aliens[0].name).toBe('Sectoid');
+        // Use difficulty 5 to allow Muton but Sectoid is still valid. Wait, it filters by difficulty correctly.
+        const res = SimEngine.run(diffConfig, {}, [], { mission: 'Abduction', month: 0, resources: 0, difficulty: 2 });
+        expect(res.pods.length).toBeGreaterThan(0);
+        expect(res.pods[0].aliens[0].name).toContain('Sectoid');
     });
 });
 

@@ -507,14 +507,19 @@
                                     <div class="form-row" v-for="(v, k) in item" :key="k">
                                         <template
                                             v-if="k !== '_originalIndex' && k !== 'Month' && k !== '_parsed' && k !== '_raw'">
-                                            <label>{{ k }}</label>
+                                            <label class="tooltip-container">
+                                                {{ formatKey(k) }}
+                                                <span v-if="getTooltip(k)" class="help-icon">?</span>
+                                                <span v-if="getTooltip(k)" class="tooltip-text">{{ getTooltip(k)
+                                                    }}</span>
+                                            </label>
                                             <select v-if="isSelectionField(k, item[k])" v-model="item[k]"
                                                 @change="queueSimulationUpdate">
                                                 <option
                                                     v-if="!constants[isSelectionField(k, item[k])].includes(item[k]) && item[k]"
-                                                    :value="item[k]">{{ item[k] }}</option>
+                                                    :value="item[k]">{{ formatName(item[k]) }}</option>
                                                 <option v-for="opt in constants[isSelectionField(k, item[k])]"
-                                                    :key="opt" :value="opt">{{ opt }}</option>
+                                                    :key="opt" :value="opt">{{ formatName(opt) }}</option>
                                             </select>
                                             <select v-else-if="isBooleanField(k, item[k])" v-model="item[k]"
                                                 @change="queueSimulationUpdate">
@@ -553,7 +558,7 @@
                                 <div v-if="isStructString(item)">
                                     <div v-for="field in IniParser.parseStructKV(item)" :key="field.k" class="form-row">
                                         <label class="tooltip-container">
-                                            {{ field.k }}
+                                            {{ formatKey(field.k) }}
                                             <span v-if="getTooltip(field.k)" class="help-icon">?</span>
                                             <span v-if="getTooltip(field.k)" class="tooltip-text">{{ getTooltip(field.k)
                                                 }}</span>
@@ -581,8 +586,12 @@
                             <div v-for="(item, idx) in val" :key="idx" class="array-item">
                                 <div v-if="isStructString(item)">
                                     <div v-for="field in IniParser.parseStructKV(item)" :key="field.k" class="form-row">
-                                        <label>{{ field.k }}</label><select v-if="isSelectionField(field.k, field.v)"
-                                            v-model="field.v"
+                                        <label class="tooltip-container">
+                                            {{ formatKey(field.k) }}
+                                            <span v-if="getTooltip(field.k)" class="help-icon">?</span>
+                                            <span v-if="getTooltip(field.k)" class="tooltip-text">{{ getTooltip(field.k)
+                                                }}</span>
+                                        </label><select v-if="isSelectionField(field.k, field.v)" v-model="field.v"
                                             @change="updateArrayStruct(activeSectionName, key, idx, field.k, $event.target.value)">
                                             <option v-for="opt in constants[isSelectionField(field.k, field.v)]"
                                                 :key="opt" :value="opt">{{ formatName(opt) }}</option>
